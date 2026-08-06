@@ -1,7 +1,25 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
-  reactCompiler: true,
+  // TipTap's useEditor is incompatible with React Compiler in this setup
+  reactCompiler: false,
+  turbopack: {
+    root: __dirname,
+  },
+  transpilePackages: [
+    "@tiptap/react",
+    "@tiptap/core",
+    "@tiptap/pm",
+    "@tiptap/starter-kit",
+    "@tiptap/extension-image",
+    "@tiptap/extension-placeholder",
+    "@tiptap/extension-text-align",
+    "@tiptap/extensions",
+  ],
 };
 
 export default nextConfig;
