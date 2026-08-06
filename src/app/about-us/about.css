@@ -1,0 +1,326 @@
+.about-page {
+  --ab-bg: #f7f6f0;
+  --ab-surface: #ffffff;
+  --ab-ink: #1e2a22;
+  --ab-ink-soft: #5a655d;
+  --ab-ink-faint: #94a099;
+  --ab-border: #e4e2d8;
+  --ab-accent: #4c7a54;
+  --ab-accent-dark: #395f40;
+  --ab-accent-soft: #e8f0e4;
+  background: var(--ab-bg);
+  color: var(--ab-ink);
+}
+
+.about-page a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.about-page .ab-hero {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px 50px;
+  text-align: center;
+}
+
+.about-page .ab-eyebrow {
+  display: inline-flex;
+  margin-bottom: 18px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--ab-accent-soft);
+  color: var(--ab-accent-dark);
+  font-size: 11.3px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.about-page .ab-hero h1 {
+  margin: 0 0 16px;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: clamp(1.7rem, 3.5vw, 2.375rem);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.about-page .ab-hero p {
+  max-width: 560px;
+  margin: 0 auto;
+  color: var(--ab-ink-soft);
+  font-size: 14px;
+}
+
+.about-page .ab-hero-image {
+  max-width: 1180px;
+  margin: 0 auto 60px;
+  padding: 0 24px;
+}
+
+.about-page .ab-hero-image img {
+  display: block;
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  border-radius: 20px;
+}
+
+.about-page .ab-story {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 50px;
+  align-items: center;
+  max-width: 1180px;
+  margin: 0 auto 70px;
+  padding: 0 24px;
+}
+
+.about-page .ab-story img {
+  display: block;
+  width: 100%;
+  height: 340px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+.about-page .ab-panel-title {
+  margin: 0 0 10px;
+  color: var(--ab-accent-dark);
+  font-size: 11.3px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.about-page .ab-story h2 {
+  margin: 0 0 16px;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.about-page .ab-story p {
+  margin: 0 0 14px;
+  color: var(--ab-ink-soft);
+  font-size: 14px;
+}
+
+.about-page .ab-stats-wrap {
+  max-width: 1180px;
+  margin: 0 auto 70px;
+  padding: 0 24px;
+}
+
+.about-page .ab-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 40px 24px;
+  border-radius: 20px;
+  background: var(--ab-accent-dark);
+}
+
+.about-page .ab-stat {
+  text-align: center;
+  color: #fff;
+}
+
+.about-page .ab-stat .num {
+  margin: 0 0 4px;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 29px;
+  font-weight: 600;
+}
+
+.about-page .ab-stat .label {
+  margin: 0;
+  color: #d7e4d2;
+  font-size: 12px;
+}
+
+.about-page .ab-values-section,
+.about-page .ab-team-section {
+  max-width: 1180px;
+  margin: 0 auto 70px;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.about-page .ab-values-section .ab-panel-title,
+.about-page .ab-team-section .ab-panel-title {
+  color: var(--ab-ink-faint);
+  margin-bottom: 8px;
+}
+
+.about-page .ab-values-section h2,
+.about-page .ab-team-section h2 {
+  margin: 0 0 40px;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 25px;
+  font-weight: 600;
+}
+
+.about-page .ab-values-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  text-align: left;
+}
+
+.about-page .ab-value-card {
+  padding: 28px;
+  border: 1px solid var(--ab-border);
+  border-radius: 16px;
+  background: var(--ab-surface);
+}
+
+.about-page .ab-icon-badge {
+  display: flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: var(--ab-accent-soft);
+  color: var(--ab-accent-dark);
+}
+
+.about-page .ab-value-card h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.about-page .ab-value-card p {
+  margin: 0;
+  color: var(--ab-ink-soft);
+  font-size: 13px;
+}
+
+.about-page .ab-team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.about-page .ab-team-card {
+  text-align: center;
+}
+
+.about-page .ab-team-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  margin-bottom: 14px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+.about-page .ab-team-placeholder {
+  display: flex;
+  width: 100%;
+  aspect-ratio: 1;
+  margin-bottom: 14px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: var(--ab-accent-soft);
+  color: var(--ab-accent-dark);
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.about-page .ab-team-empty {
+  margin: 0;
+  color: var(--ab-muted);
+  font-size: 14px;
+}
+
+.about-page .ab-team-card .name {
+  margin: 0 0 3px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.about-page .ab-team-card .role {
+  margin: 0;
+  color: var(--ab-accent-dark);
+  font-size: 12px;
+}
+
+.about-page .ab-cta-wrap {
+  max-width: 1180px;
+  margin: 0 auto 70px;
+  padding: 0 24px;
+}
+
+.about-page .ab-cta {
+  padding: 50px 40px;
+  border-radius: 20px;
+  background: var(--ab-accent-soft);
+  text-align: center;
+}
+
+.about-page .ab-cta h2 {
+  margin: 0 0 12px;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 23px;
+  font-weight: 600;
+}
+
+.about-page .ab-cta p {
+  max-width: 480px;
+  margin: 0 auto 24px;
+  color: var(--ab-ink-soft);
+  font-size: 14px;
+}
+
+.about-page .ab-cta-btn {
+  display: inline-block;
+  padding: 13px 28px;
+  border-radius: 9px;
+  background: var(--ab-accent);
+  color: #fff;
+  font-size: 13.1px;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.about-page .ab-cta-btn:hover {
+  background: var(--ab-accent-dark);
+}
+
+@media (max-width: 900px) {
+  .about-page .ab-story {
+    grid-template-columns: 1fr;
+  }
+
+  .about-page .ab-story .img-col {
+    order: -1;
+  }
+
+  .about-page .ab-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .about-page .ab-values-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-page .ab-team-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .about-page .ab-hero-image img {
+    height: 220px;
+  }
+
+  .about-page .ab-cta {
+    padding: 36px 22px;
+  }
+}
