@@ -1,4 +1,4 @@
-import pool from "./db";
+import pool, { shouldUseLocalDbFallback } from "./db";
 
 const globalForTeam = globalThis;
 
@@ -44,15 +44,23 @@ async function ensureTeamTable() {
 }
 
 export async function listTeamMembers({ activeOnly = false } = {}) {
-  await ensureTeamTable();
-  const where = activeOnly ? "WHERE is_active = TRUE" : "";
-  const { rows } = await pool.query(
-    `SELECT id, name, role, image_url, bio, sort_order, is_active, created_at, updated_at
-     FROM site_team_members
-     ${where}
-     ORDER BY sort_order ASC, id ASC`,
-  );
-  return rows.map(mapTeamMember);
+  try {
+    await ensureTeamTable();
+    const where = activeOnly ? "WHERE is_active = TRUE" : "";
+    const { rows } = await pool.query(
+      `SELECT id, name, role, image_url, bio, sort_order, is_active, created_at, updated_at
+       FROM site_team_members
+       ${where}
+       ORDER BY sort_order ASC, id ASC`,
+    );
+    return rows.map(mapTeamMember);
+  } catch (error) {
+    if (shouldUseLocalDbFallback(error)) {
+      console.warn("[team] PostgreSQL unavailable, returning empty team list");
+      return [];
+    }
+    throw error;
+  }
 }
 
 export async function getTeamMemberById(id) {
