@@ -62,20 +62,20 @@ export default function Footer() {
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6">
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-            <BrandLogo className="text-sm" size={22} />
+            <BrandLogo className="text-base" size={24} />
             <span className="hidden text-nf-border sm:inline" aria-hidden="true">
               ·
             </span>
-            <p className="text-sm text-nf-secondary">
+            <p className="text-base text-nf-secondary">
               © {new Date().getFullYear()} NutriFactx. All rights reserved.
             </p>
           </div>
-          <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[13px] text-nf-secondary">
+          <nav className="flex flex-nowrap items-center justify-center gap-x-4 text-sm text-nf-secondary">
             {footerLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="transition-colors hover:text-nf-green"
+                className="shrink-0 whitespace-nowrap transition-colors hover:text-nf-green"
               >
                 {link.label}
               </Link>
@@ -93,8 +93,8 @@ export default function Footer() {
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
+                  width="16"
+                  height="16"
                   viewBox="0 0 24 24"
                   fill="currentColor"
                   aria-hidden="true"

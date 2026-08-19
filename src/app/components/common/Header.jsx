@@ -75,9 +75,9 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-nf-border bg-white/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
-        <BrandLogo className="shrink-0 text-base" size={28} />
+        <BrandLogo className="shrink-0 text-lg" size={30} />
 
-        <nav className="hidden items-center gap-7 text-[13px] text-nf-secondary md:flex">
+        <nav className="hidden items-center gap-7 text-sm text-nf-secondary md:flex">
           {navLinks.map((link) => {
             const active = pathname === link.href;
             return (
@@ -127,7 +127,7 @@ export default function Header() {
                   }}
                   onFocus={() => setOpen(true)}
                   placeholder="Search blogs..."
-                  className="w-40 bg-transparent text-sm text-nf-text outline-none placeholder:text-nf-muted lg:w-52"
+                  className="w-40 bg-transparent text-base text-nf-text outline-none placeholder:text-nf-muted lg:w-52"
                   autoComplete="off"
                 />
               </div>
