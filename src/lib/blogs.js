@@ -10,32 +10,45 @@ import {
   searchPublishedPosts,
 } from "./posts";
 import { getVisibleCommentsBySlug } from "./comments";
+import { shouldUseLocalDbFallback } from "./db";
 
 /** @deprecated Prefer async helpers below — kept empty so client imports don't crash. */
 export const allBlogs = [];
 
+async function withBlogFallback(fn, fallback = []) {
+  try {
+    return await fn();
+  } catch (error) {
+    if (shouldUseLocalDbFallback(error)) {
+      console.warn("[blogs] PostgreSQL unavailable:", error.message);
+      return fallback;
+    }
+    throw error;
+  }
+}
+
 export async function getAllBlogs() {
-  return listPublishedPosts();
+  return withBlogFallback(() => listPublishedPosts());
 }
 
 export async function getRecentBlogs(limit = 4) {
-  return getRecentPublished(limit);
+  return withBlogFallback(() => getRecentPublished(limit));
 }
 
 export async function getLatestBlogs(limit = 4) {
-  return getLatestPublished(limit);
+  return withBlogFallback(() => getLatestPublished(limit));
 }
 
 export async function getFeaturedBlogs(limit = 6) {
-  return getFeaturedPublished(limit);
+  return withBlogFallback(() => getFeaturedPublished(limit));
 }
 
 export async function getBlogBySlug(slug) {
-  return getPublishedPostBySlug(slug);
+  return withBlogFallback(() => getPublishedPostBySlug(slug), null);
 }
 
 export async function getRelatedBlogs(slug, limit = 6) {
-  return getRelatedPublished(slug, limit);
+  return withBlogFallback(() => getRelatedPublished(slug, limit));
 }
 
 export async function getBlogComments(slug) {

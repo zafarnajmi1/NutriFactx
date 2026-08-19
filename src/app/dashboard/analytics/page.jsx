@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import DashboardSidebar from "../DashboardSidebar";
 import TrafficChart from "../TrafficChart";
+import { getDashboardSession } from "@/lib/dashboardAuth";
 import "../dashboard.css";
 
 const emptyStats = {
@@ -25,26 +26,51 @@ export default function DashboardAnalyticsPage() {
   const [range, setRange] = useState("30d");
   const [payload, setPayload] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetBusy, setResetBusy] = useState(false);
+  const [resetError, setResetError] = useState("");
+
+  const isAdmin = currentUser?.role === "admin";
+
+  const loadAnalytics = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/dashboard/analytics?range=${range}`);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) setPayload(data);
+    } catch {
+      setPayload(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [range]);
 
   useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/dashboard/analytics?range=${range}`);
-        const data = await res.json().catch(() => ({}));
-        if (!cancelled && res.ok) setPayload(data);
-      } catch {
-        if (!cancelled) setPayload(null);
-      } finally {
-        if (!cancelled) setLoading(false);
+    setCurrentUser(getDashboardSession());
+  }, []);
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [loadAnalytics]);
+
+  async function confirmResetAnalytics() {
+    setResetBusy(true);
+    setResetError("");
+    try {
+      const res = await fetch("/api/dashboard/analytics", { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.detail || data.error || "Failed to reset analytics");
       }
+      setShowResetConfirm(false);
+      await loadAnalytics();
+    } catch (err) {
+      setResetError(err.message || "Failed to reset analytics");
+    } finally {
+      setResetBusy(false);
     }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [range]);
+  }
 
   const stats = useMemo(
     () => ({ ...emptyStats, ...(payload?.stats || {}) }),
@@ -90,6 +116,18 @@ export default function DashboardAnalyticsPage() {
               <Link href="/dashboard/articles" className="db-secondary-btn">
                 View articles
               </Link>
+              {isAdmin ? (
+                <button
+                  type="button"
+                  className="db-secondary-btn"
+                  onClick={() => {
+                    setResetError("");
+                    setShowResetConfirm(true);
+                  }}
+                >
+                  Reset data
+                </button>
+              ) : null}
             </div>
           </div>
 
@@ -314,6 +352,49 @@ export default function DashboardAnalyticsPage() {
           </div>
         </main>
       </div>
+
+      {showResetConfirm ? (
+        <div
+          className="db-confirm-overlay"
+          role="presentation"
+          onClick={() => {
+            if (!resetBusy) setShowResetConfirm(false);
+          }}
+        >
+          <div
+            className="db-confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reset-analytics-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 id="reset-analytics-title">Reset analytics data?</h3>
+            <p>
+              This clears all page views, sessions, and article view counts.
+              New traffic will be tracked from zero. This cannot be undone.
+            </p>
+            {resetError ? <p className="db-manager-add-error">{resetError}</p> : null}
+            <div className="db-confirm-actions">
+              <button
+                type="button"
+                className="db-secondary-btn"
+                onClick={() => setShowResetConfirm(false)}
+                disabled={resetBusy}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="db-confirm-delete-btn"
+                onClick={confirmResetAnalytics}
+                disabled={resetBusy}
+              >
+                {resetBusy ? "Resetting…" : "Reset analytics"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
