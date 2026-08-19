@@ -3,29 +3,32 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const fallbackSlides = [
-  {
-    id: "fallback-1",
-    title: "The science-backed guide to gut health in 2026",
-    meta: "Reviewed by Dr. Sara Khan, MD · 8 min read",
-    href: "/blogs",
-  },
-  {
-    id: "fallback-2",
-    title: "How daily fiber intake reshapes your energy levels",
-    meta: "Reviewed by NutriFactx Editorial · 6 min read",
-    href: "/blogs",
-  },
-  {
-    id: "fallback-3",
-    title: "Evidence-based habits for better metabolic health",
-    meta: "Reviewed by Dr. Amir Raza, MD · 7 min read",
-    href: "/blogs",
-  },
-];
+function getFallbackSlides() {
+  const year = new Date().getFullYear();
+  return [
+    {
+      id: "fallback-1",
+      title: `The science-backed guide to gut health in ${year}`,
+      meta: "Reviewed by Dr. Sara Khan, MD · 8 min read",
+      href: "/blogs",
+    },
+    {
+      id: "fallback-2",
+      title: "How daily fiber intake reshapes your energy levels",
+      meta: "Reviewed by NutriFactx Editorial · 6 min read",
+      href: "/blogs",
+    },
+    {
+      id: "fallback-3",
+      title: "Evidence-based habits for better metabolic health",
+      meta: "Reviewed by Dr. Amir Raza, MD · 7 min read",
+      href: "/blogs",
+    },
+  ];
+}
 
 export default function BannerSection({ slides = [] }) {
-  const featuredSlides = slides.length > 0 ? slides : fallbackSlides;
+  const featuredSlides = slides.length > 0 ? slides : getFallbackSlides();
   const [active, setActive] = useState(0);
   const slide = featuredSlides[active] || featuredSlides[0];
 
