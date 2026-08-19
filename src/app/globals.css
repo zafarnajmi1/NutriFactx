@@ -14,6 +14,7 @@
   --nf-text-muted: #6b8178;
   --background: var(--nf-surface);
   --foreground: var(--nf-text);
+  --nf-header-height: 3.75rem;
 }
 
 @theme inline {
