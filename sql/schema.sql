@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS site_social_links (
 
 INSERT INTO site_social_links (platform)
 VALUES ('facebook'), ('instagram'), ('x'), ('linkedin'), ('youtube'),
-       ('pinterest')
+       ('pinterest'), ('reddit')
 ON CONFLICT (platform) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS subscribers (

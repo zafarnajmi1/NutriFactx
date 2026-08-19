@@ -60,6 +60,18 @@ const platforms = [
       </>
     ),
   },
+  {
+    key: "reddit",
+    label: "Reddit",
+    icon: (
+      <>
+        <circle cx="12" cy="12" r="10" />
+        <circle cx="9" cy="12" r="1" fill="currentColor" />
+        <circle cx="15" cy="12" r="1" fill="currentColor" />
+        <path d="M9.5 15c.8.8 4.2.8 5 0" />
+      </>
+    ),
+  },
 ];
 
 export default function ContactSocialLinks() {

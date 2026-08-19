@@ -130,7 +130,7 @@ function LoginForm() {
           <div className="db-login-demo">
             <p className="label">Demo accounts</p>
             <p>
-              Admin: <code>ayesha@nutrifactx.com</code> / <code>admin1234</code>
+              Admin: <code>admin@nutrifactx.com</code> / <code>admin1234</code>
             </p>
             <p>
               Manager: <code>bilal@nutrifactx.com</code> / <code>manager123</code>

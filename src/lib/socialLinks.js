@@ -7,6 +7,7 @@ export const SOCIAL_PLATFORMS = [
   "linkedin",
   "youtube",
   "pinterest",
+  "reddit",
 ];
 
 const globalForSocialLinks = globalThis;
@@ -23,7 +24,7 @@ async function ensureSocialLinksTable() {
 
         INSERT INTO site_social_links (platform)
         VALUES ('facebook'), ('instagram'), ('x'), ('linkedin'), ('youtube'),
-               ('pinterest')
+               ('pinterest'), ('reddit')
         ON CONFLICT (platform) DO NOTHING;
       `)
       .catch((error) => {

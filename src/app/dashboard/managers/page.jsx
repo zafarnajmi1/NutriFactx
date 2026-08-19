@@ -9,7 +9,7 @@ const initialManagers = [
   {
     id: "m1",
     name: "Ayesha Khan",
-    email: "ayesha@nutrifactx.com",
+    email: "admin@nutrifactx.com",
     initials: "AK",
     role: "admin",
     status: "active",

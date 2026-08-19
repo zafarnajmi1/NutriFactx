@@ -35,6 +35,11 @@ const platforms = [
     label: "Pinterest",
     placeholder: "https://www.pinterest.com/nutrifactx",
   },
+  {
+    key: "reddit",
+    label: "Reddit",
+    placeholder: "https://www.reddit.com/user/nutrifactx",
+  },
 ];
 
 const emptyLinks = Object.fromEntries(
