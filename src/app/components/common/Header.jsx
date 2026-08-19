@@ -73,7 +73,7 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-nf-border bg-white/95 backdrop-blur-sm">
+    <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-nf-border bg-white/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
         <BrandLogo className="shrink-0 text-lg" size={30} />
 
