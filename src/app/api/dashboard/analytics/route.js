@@ -1,5 +1,7 @@
+import { resetAnalyticsData } from "@/lib/analytics";
 import {
   getServerDashboardSession,
+  requireAdmin,
   requireDashboardSession,
 } from "@/lib/session";
 import {
@@ -27,5 +29,25 @@ export async function GET(request) {
   } catch (error) {
     console.error("GET /api/dashboard/analytics", error);
     return Response.json({ error: "Failed to load analytics" }, { status: 500 });
+  }
+}
+
+export async function DELETE() {
+  const session = await getServerDashboardSession();
+  const gate = requireAdmin(session);
+  if (!gate.ok) return gate.response;
+
+  try {
+    await resetAnalyticsData();
+    return Response.json({ ok: true });
+  } catch (error) {
+    console.error("DELETE /api/dashboard/analytics", error);
+    return Response.json(
+      {
+        error: "Failed to reset analytics",
+        detail: error?.message || "Unknown database error",
+      },
+      { status: 500 },
+    );
   }
 }

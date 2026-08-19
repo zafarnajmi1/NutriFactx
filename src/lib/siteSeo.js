@@ -1,4 +1,4 @@
-import pool from "./db";
+import pool, { shouldUseLocalDbFallback } from "./db";
 import { absoluteUrl, getSiteUrl } from "./seo";
 
 export const SITE_SEO_PAGES = [
@@ -272,31 +272,51 @@ export function isValidSiteSeoPage(pageKey) {
 }
 
 export async function listSiteSeoPages() {
-  await ensureSiteSeoTable();
-  const { rows } = await pool.query(
-    `SELECT *
-     FROM site_page_seo
-     WHERE page_key = ANY($1::text[])`,
-    [PAGE_KEYS],
-  );
+  try {
+    await ensureSiteSeoTable();
+    const { rows } = await pool.query(
+      `SELECT *
+       FROM site_page_seo
+       WHERE page_key = ANY($1::text[])`,
+      [PAGE_KEYS],
+    );
 
-  return SITE_SEO_PAGES.map((page) => ({
-    ...page,
-    seo: mapRow(
-      rows.find((row) => row.page_key === page.key),
-      page.key,
-    ),
-  }));
+    return SITE_SEO_PAGES.map((page) => ({
+      ...page,
+      seo: mapRow(
+        rows.find((row) => row.page_key === page.key),
+        page.key,
+      ),
+    }));
+  } catch (error) {
+    if (shouldUseLocalDbFallback(error)) {
+      console.warn("[siteSeo] PostgreSQL unavailable, using default SEO pages");
+      return SITE_SEO_PAGES.map((page) => ({
+        ...page,
+        seo: mapRow(null, page.key),
+      }));
+    }
+    throw error;
+  }
 }
 
 export async function getSiteSeo(pageKey) {
   if (!isValidSiteSeoPage(pageKey)) return null;
-  await ensureSiteSeoTable();
-  const { rows } = await pool.query(
-    `SELECT * FROM site_page_seo WHERE page_key = $1 LIMIT 1`,
-    [pageKey],
-  );
-  return mapRow(rows[0], pageKey);
+
+  try {
+    await ensureSiteSeoTable();
+    const { rows } = await pool.query(
+      `SELECT * FROM site_page_seo WHERE page_key = $1 LIMIT 1`,
+      [pageKey],
+    );
+    return mapRow(rows[0], pageKey);
+  } catch (error) {
+    if (shouldUseLocalDbFallback(error)) {
+      console.warn(`[siteSeo] PostgreSQL unavailable, using defaults for ${pageKey}`);
+      return mapRow(null, pageKey);
+    }
+    throw error;
+  }
 }
 
 export async function saveSiteSeo(pageKey, payload) {

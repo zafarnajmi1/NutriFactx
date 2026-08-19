@@ -288,3 +288,24 @@ export async function updatePageEngagement(payload) {
 
   return { tracked: rowCount > 0 };
 }
+
+async function ensurePostsViewsColumn(query = pool.query.bind(pool)) {
+  await query(`
+    ALTER TABLE posts ADD COLUMN IF NOT EXISTS views integer NOT NULL DEFAULT 0
+  `);
+}
+
+export async function resetAnalyticsData() {
+  await ensureAnalyticsSchema();
+  await ensurePostsViewsColumn();
+
+  const client = await pool.connect();
+  try {
+    await client.query("DELETE FROM analytics_pageviews");
+    await client.query("DELETE FROM analytics_sessions");
+    await client.query("UPDATE posts SET views = 0");
+    return { ok: true };
+  } finally {
+    client.release();
+  }
+}
