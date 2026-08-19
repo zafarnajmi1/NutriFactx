@@ -1,4 +1,4 @@
-import pool from "./db";
+import pool, { shouldUseLocalDbFallback } from "./db";
 import { ensureAnalyticsSchema } from "./analytics";
 
 const RANGE_DAYS = { "7d": 7, "30d": 30, "90d": 90 };
@@ -192,28 +192,36 @@ async function getSubscriberCount() {
 }
 
 export async function getPublicSiteStats() {
-  await ensureAnalyticsSchema();
+  try {
+    await ensureAnalyticsSchema();
 
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const [published, monthlyReaders] = await Promise.all([
-    pool.query(
-      `SELECT COUNT(*)::int AS count
-       FROM posts
-       WHERE status = 'PUBLISHED'`,
-    ),
-    pool.query(
-      `SELECT COUNT(DISTINCT visitor_id)::int AS count
-       FROM analytics_pageviews
-       WHERE viewed_at >= $1`,
-      [monthStart],
-    ),
-  ]);
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const [published, monthlyReaders] = await Promise.all([
+      pool.query(
+        `SELECT COUNT(*)::int AS count
+         FROM posts
+         WHERE status = 'PUBLISHED'`,
+      ),
+      pool.query(
+        `SELECT COUNT(DISTINCT visitor_id)::int AS count
+         FROM analytics_pageviews
+         WHERE viewed_at >= $1`,
+        [monthStart],
+      ),
+    ]);
 
-  return {
-    publishedArticles: formatCompact(published.rows[0]?.count),
-    monthlyReaders: formatCompact(monthlyReaders.rows[0]?.count),
-  };
+    return {
+      publishedArticles: formatCompact(published.rows[0]?.count),
+      monthlyReaders: formatCompact(monthlyReaders.rows[0]?.count),
+    };
+  } catch (error) {
+    if (shouldUseLocalDbFallback(error)) {
+      console.warn("[stats] PostgreSQL unavailable, using zero site stats");
+      return { publishedArticles: "0", monthlyReaders: "0" };
+    }
+    throw error;
+  }
 }
 
 export async function getDashboardHomeData() {
