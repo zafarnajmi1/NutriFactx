@@ -6,7 +6,7 @@ export const DASHBOARD_USERS = [
   {
     id: "m1",
     name: "Ayesha Khan",
-    email: "ayesha@nutrifactx.com",
+    email: "admin@nutrifactx.com",
     password: "admin1234",
     role: "admin",
     title: "Admin",

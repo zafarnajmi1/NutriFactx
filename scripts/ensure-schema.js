@@ -119,7 +119,7 @@ async function addEnum(type, value) {
 
     INSERT INTO site_social_links (platform)
     VALUES ('facebook'), ('instagram'), ('x'), ('linkedin'), ('youtube'),
-           ('pinterest')
+           ('pinterest'), ('reddit')
     ON CONFLICT (platform) DO NOTHING;
 
     CREATE TABLE IF NOT EXISTS subscribers (
@@ -177,7 +177,7 @@ async function addEnum(type, value) {
     INSERT INTO users (name, email, password, user_role)
     SELECT v.name, v.email, v.password, v.role::user_role
     FROM (VALUES
-      ('Ayesha Khan', 'ayesha@nutrifactx.com', 'admin1234', 'ADMIN'),
+      ('Ayesha Khan', 'admin@nutrifactx.com', 'admin1234', 'ADMIN'),
       ('Bilal Ahmed', 'bilal@nutrifactx.com', 'manager123', 'MANAGER'),
       ('Hina Noor', 'hina@nutrifactx.com', 'manager123', 'MANAGER')
     ) AS v(name, email, password, role)
