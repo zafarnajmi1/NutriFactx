@@ -8,7 +8,7 @@ export default async function RecentPosts() {
 
   return (
     <section className="nf-animate-fade-up nf-delay-1">
-      <h2 className="mb-3.5 font-[family-name:var(--font-fraunces)] text-base font-medium text-nf-text sm:text-lg">
+      <h2 className="nf-section-title mb-3.5">
         Recent posts
       </h2>
       <div className="nf-posts-grid">

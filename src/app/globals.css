@@ -15,6 +15,12 @@
   --background: var(--nf-surface);
   --foreground: var(--nf-text);
   --nf-header-height: 3.75rem;
+  /* Fluid page shell — scales with viewport, wider on large screens */
+  --nf-page-max: min(92rem, 96vw);
+  --nf-prose-max: min(80rem, 94vw);
+  --nf-hero-title: clamp(2.05rem, 1.3rem + 2.4vw, 2.85rem);
+  --nf-section-title: clamp(1.2rem, 1.05rem + 0.55vw, 1.375rem);
+  --nf-body: clamp(1rem, 0.95rem + 0.25vw, 1.0625rem);
 }
 
 @theme inline {
@@ -42,9 +48,69 @@ body {
 }
 
 html {
-  font-size: 16px;
+  /* Scales with viewport: ~17px phone → 18px laptop → 20px large screens */
+  font-size: clamp(17px, 0.96vw + 14px, 20px);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+}
+
+.nf-page {
+  width: 100%;
+  max-width: var(--nf-page-max);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .nf-page {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .nf-page {
+    padding-inline: 2rem;
+  }
+}
+
+.nf-prose {
+  width: 100%;
+  max-width: var(--nf-prose-max);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .nf-prose {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .nf-prose {
+    padding-inline: 2rem;
+  }
+}
+
+.nf-hero-title {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: var(--nf-hero-title);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.nf-section-title {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: var(--nf-section-title);
+  font-weight: 500;
+  color: var(--nf-text);
+}
+
+.nf-body-text {
+  font-size: var(--nf-body);
+  line-height: 1.625;
+  color: var(--nf-text-secondary);
 }
 
 html,

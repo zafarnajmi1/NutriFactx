@@ -18,7 +18,7 @@
 }
 
 .contact-page .ct-shell {
-  max-width: 1180px;
+  max-width: var(--nf-page-max, 92rem);
   margin: 20px auto 70px;
   padding: 0 24px;
 }
@@ -56,7 +56,7 @@
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.14);
   color: #eaf3e5;
-  font-size: 11px;
+  font-size: 12.3px;
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -65,7 +65,7 @@
 .contact-page .ct-left h1 {
   margin: 0 0 14px;
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 27px;
+  font-size: 30.2px;
   font-weight: 600;
   line-height: 1.25;
 }
@@ -74,7 +74,7 @@
   max-width: 340px;
   margin: 0;
   color: #dde9d8;
-  font-size: 13.1px;
+  font-size: 14.7px;
 }
 
 .contact-page .ct-left-info {
@@ -105,13 +105,13 @@
 .contact-page .ct-left-info-item .label {
   margin: 0;
   color: #b9cbb2;
-  font-size: 11px;
+  font-size: 12.3px;
 }
 
 .contact-page .ct-left-info-item .value {
   margin: 0;
   color: #fff;
-  font-size: 13px;
+  font-size: 14.6px;
   font-weight: 500;
 }
 
@@ -143,19 +143,19 @@
 .contact-page .ct-right h2 {
   margin: 0 0 6px;
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 22px;
+  font-size: 24.6px;
   font-weight: 600;
 }
 
 .contact-page .ct-sub {
   margin: 0 0 30px;
   color: var(--ct-ink-soft);
-  font-size: 13px;
+  font-size: 14.6px;
 }
 
 .contact-page .ct-topic-label {
   margin: 0 0 10px;
-  font-size: 12px;
+  font-size: 13.4px;
   font-weight: 500;
 }
 
@@ -172,7 +172,7 @@
   border-radius: 20px;
   background: transparent;
   color: var(--ct-ink-soft);
-  font-size: 12px;
+  font-size: 13.4px;
   cursor: pointer;
 }
 
@@ -196,7 +196,7 @@
 .contact-page .ct-field label {
   display: block;
   margin-bottom: 6px;
-  font-size: 12px;
+  font-size: 13.4px;
   font-weight: 500;
 }
 
@@ -209,7 +209,7 @@
   background: #fcfcf9;
   color: var(--ct-ink);
   font-family: inherit;
-  font-size: 13.1px;
+  font-size: 14.7px;
 }
 
 .contact-page .ct-field textarea {
@@ -230,7 +230,7 @@
   gap: 8px;
   margin-bottom: 24px;
   color: var(--ct-ink-soft);
-  font-size: 11.3px;
+  font-size: 12.7px;
 }
 
 .contact-page .ct-consent input {
@@ -246,7 +246,7 @@
   border-radius: 9px;
   background: var(--ct-accent);
   color: #fff;
-  font-size: 13.1px;
+  font-size: 14.7px;
   font-weight: 500;
   cursor: pointer;
 }
@@ -261,12 +261,88 @@
   gap: 8px;
   margin-top: 16px;
   color: var(--ct-ink-faint);
-  font-size: 12px;
+  font-size: 13.4px;
 }
 
 .contact-page .ct-response-note svg {
   color: var(--ct-accent);
   flex-shrink: 0;
+}
+
+.contact-page .ct-tips {
+  margin-top: 48px;
+  padding: 40px 36px 44px;
+  border: 1px solid var(--ct-border);
+  border-radius: 24px;
+  background: var(--ct-surface);
+}
+
+.contact-page .ct-tips-head {
+  max-width: 640px;
+  margin-bottom: 28px;
+}
+
+.contact-page .ct-tips-eyebrow {
+  display: inline-flex;
+  margin-bottom: 12px;
+  padding: 6px 13px;
+  border-radius: 20px;
+  background: var(--ct-accent-soft);
+  color: var(--ct-accent-dark);
+  font-size: 12.3px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.contact-page .ct-tips-head h2 {
+  margin: 0 0 10px;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: clamp(1.35rem, 1rem + 1.2vw, 1.75rem);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.contact-page .ct-tips-head p {
+  margin: 0;
+  color: var(--ct-ink-soft);
+  font-size: 15.7px;
+  line-height: 1.6;
+}
+
+.contact-page .ct-tips-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.contact-page .ct-tip-card {
+  padding: 22px 20px;
+  border: 1px solid var(--ct-border);
+  border-radius: 16px;
+  background: #fcfcf9;
+}
+
+.contact-page .ct-tip-icon {
+  display: inline-flex;
+  margin-bottom: 12px;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.contact-page .ct-tip-card h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.contact-page .ct-tip-card p {
+  margin: 0;
+  color: var(--ct-ink-soft);
+  font-size: 14.6px;
+  line-height: 1.6;
 }
 
 @media (max-width: 900px) {
@@ -282,11 +358,19 @@
   .contact-page .ct-right {
     padding: 36px 28px;
   }
+
+  .contact-page .ct-tips-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .contact-page .ct-tips {
+    padding: 32px 24px 36px;
+  }
 }
 
 @media (max-width: 560px) {
   .contact-page .ct-left h1 {
-    font-size: 22px;
+    font-size: 24.6px;
   }
 
   .contact-page .ct-field-row {
@@ -299,5 +383,9 @@
 
   .contact-page .ct-left {
     padding: 32px 24px;
+  }
+
+  .contact-page .ct-tips-grid {
+    grid-template-columns: 1fr;
   }
 }

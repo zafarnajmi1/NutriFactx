@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import BrandWordmark from "../../components/common/BrandWordmark";
-import { getDefaultDashboardPath, isManagerAllowedPath, loginDashboardUser } from "../../../lib/dashboardAuth";
+import { getDefaultDashboardPath, isManagerAllowedPath, loginDashboardUserFromApi } from "../../../lib/dashboardAuth";
 import "../dashboard.css";
 
 function LoginForm() {
@@ -21,29 +21,30 @@ function LoginForm() {
     setError("");
     setLoading(true);
 
-    const result = loginDashboardUser(email, password);
-    if (!result.ok) {
-      setError(result.error || "Unable to sign in.");
-      setLoading(false);
-      return;
-    }
-
-    const next = searchParams.get("next");
-    const home = getDefaultDashboardPath(result.user.role);
-    let target = home;
-
-    if (
-      next &&
-      next.startsWith("/dashboard") &&
-      next !== "/dashboard/login"
-    ) {
-      if (result.user.role === "admin" || isManagerAllowedPath(next)) {
-        target = next;
+    loginDashboardUserFromApi(email, password).then((result) => {
+      if (!result.ok) {
+        setError(result.error || "Unable to sign in.");
+        setLoading(false);
+        return;
       }
-    }
 
-    router.replace(target);
-    router.refresh();
+      const next = searchParams.get("next");
+      const home = getDefaultDashboardPath(result.user.role);
+      let target = home;
+
+      if (
+        next &&
+        next.startsWith("/dashboard") &&
+        next !== "/dashboard/login"
+      ) {
+        if (result.user.role === "admin" || isManagerAllowedPath(next)) {
+          target = next;
+        }
+      }
+
+      router.replace(target);
+      router.refresh();
+    });
   }
 
   return (

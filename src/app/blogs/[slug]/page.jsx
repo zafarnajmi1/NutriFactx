@@ -54,10 +54,13 @@ export default async function BlogDetailPage({ params }) {
   const similar = similarRecentPosts
     .filter((item) => item.slug !== blog.slug)
     .slice(0, 4);
-  const tags =
-    blog.tags?.length > 0
-      ? blog.tags
-      : [blog.category, "Wellness", "Health"].filter(Boolean);
+  const keywords = [
+    blog.focusKeyword,
+    ...(Array.isArray(blog.tags) ? blog.tags : []),
+    blog.category,
+  ]
+    .map((item) => String(item || "").trim())
+    .filter(Boolean);
 
   const showBannerImage = Boolean(blog.featuredImage);
   const jsonLd = buildArticleJsonLd(blog);
@@ -124,8 +127,8 @@ export default async function BlogDetailPage({ params }) {
                 content={blog.metaDescription || blog.excerpt}
               />
             ) : null}
-            {blog.focusKeyword ? (
-              <meta itemProp="keywords" content={blog.focusKeyword} />
+            {keywords.length ? (
+              <meta itemProp="keywords" content={keywords.join(", ")} />
             ) : null}
 
             <header>
@@ -148,14 +151,6 @@ export default async function BlogDetailPage({ params }) {
               ) : (
                 <p>{blog.excerpt}</p>
               )}
-
-              <div className="bd-tags">
-                {tags.map((tag) => (
-                  <span key={tag} className="bd-tag">
-                    {tag}
-                  </span>
-                ))}
-              </div>
             </div>
 
             <BlogComments

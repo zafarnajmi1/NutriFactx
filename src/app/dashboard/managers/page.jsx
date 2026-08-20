@@ -1,56 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import DashboardSidebar from "../DashboardSidebar";
 import { getDashboardSession } from "../../../lib/dashboardAuth";
 import "../dashboard.css";
-
-const initialManagers = [
-  {
-    id: "m1",
-    name: "Ayesha Khan",
-    email: "admin@nutrifactx.com",
-    initials: "AK",
-    role: "admin",
-    status: "active",
-    department: "Editorial",
-    joined: "Jan 12, 2025",
-    password: "••••••••",
-  },
-  {
-    id: "m2",
-    name: "Bilal Ahmed",
-    email: "bilal@nutrifactx.com",
-    initials: "BA",
-    role: "manager",
-    status: "active",
-    department: "Content",
-    joined: "Mar 4, 2025",
-    password: "••••••••",
-  },
-  {
-    id: "m3",
-    name: "Hina Noor",
-    email: "hina@nutrifactx.com",
-    initials: "HN",
-    role: "manager",
-    status: "active",
-    department: "SEO",
-    joined: "May 18, 2025",
-    password: "••••••••",
-  },
-  {
-    id: "m4",
-    name: "Omar Farooq",
-    email: "omar@nutrifactx.com",
-    initials: "OF",
-    role: "manager",
-    status: "inactive",
-    department: "Community",
-    joined: "Sep 2, 2025",
-    password: "••••••••",
-  },
-];
 
 const roleLabel = {
   admin: "Admin",
@@ -67,6 +20,7 @@ const emptyForm = {
   email: "",
   department: "Content",
   status: "active",
+  role: "manager",
   password: "",
   confirmPassword: "",
 };
@@ -92,10 +46,11 @@ function validatePassword(password, { required = true } = {}) {
 }
 
 export default function DashboardManagersPage() {
-  const [managers, setManagers] = useState(initialManagers);
+  const [managers, setManagers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
-  const [modalMode, setModalMode] = useState(null); // 'add' | 'edit' | null
+  const [modalMode, setModalMode] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -103,10 +58,34 @@ export default function DashboardManagersPage() {
   const [error, setError] = useState("");
   const [savedHint, setSavedHint] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const loadUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/dashboard/users");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Could not load users.");
+      }
+      const users = Array.isArray(data.users) ? data.users : [];
+      setManagers(
+        users.map((user) => ({
+          ...user,
+          password: user.hasPassword ? "••••••••" : "",
+        })),
+      );
+    } catch (loadError) {
+      setError(loadError.message || "Could not load users.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     setCurrentUser(getDashboardSession());
-  }, []);
+    loadUsers();
+  }, [loadUsers]);
 
   const isAdmin = currentUser?.role === "admin";
 
@@ -152,7 +131,7 @@ export default function DashboardManagersPage() {
   }
 
   function openEdit(item) {
-    if (!isAdmin || item.role !== "manager") return;
+    if (!isAdmin) return;
     setModalMode("edit");
     setEditTarget(item);
     setForm({
@@ -160,6 +139,7 @@ export default function DashboardManagersPage() {
       email: item.email,
       department: item.department,
       status: item.status,
+      role: item.role,
       password: "",
       confirmPassword: "",
     });
@@ -180,9 +160,9 @@ export default function DashboardManagersPage() {
     setError("");
   }
 
-  function handleSave(event) {
+  async function handleSave(event) {
     event.preventDefault();
-    if (!isAdmin) return;
+    if (!isAdmin || saving) return;
 
     const name = form.name.trim();
     const email = form.email.trim().toLowerCase();
@@ -199,16 +179,6 @@ export default function DashboardManagersPage() {
       return;
     }
 
-    const emailTaken = managers.some(
-      (m) =>
-        m.email.toLowerCase() === email &&
-        (!editTarget || m.id !== editTarget.id),
-    );
-    if (emailTaken) {
-      setError("A team member with this email already exists.");
-      return;
-    }
-
     const passwordError = validatePassword(password, { required: isAdd });
     if (passwordError) {
       setError(passwordError);
@@ -219,55 +189,59 @@ export default function DashboardManagersPage() {
       return;
     }
 
-    if (isAdd) {
-      const next = {
-        id: `m${Date.now()}`,
+    setSaving(true);
+    setError("");
+
+    try {
+      const payload = {
         name,
         email,
-        initials: initialsFromName(name),
-        role: "manager",
-        status: form.status,
         department: form.department,
-        joined: new Date().toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }),
-        password,
+        status: form.status,
+        role: form.role,
+        ...(password ? { password } : {}),
       };
-      setManagers((prev) => [next, ...prev]);
-      flash(`Manager “${name}” added with password.`);
+
+      const url = isAdd
+        ? "/api/dashboard/users"
+        : `/api/dashboard/users/${editTarget.id}`;
+      const method = isAdd ? "POST" : "PATCH";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Could not save user.");
+      }
+
+      await loadUsers();
+      flash(
+        isAdd
+          ? `${roleLabel[form.role] || "User"} “${name}” added.`
+          : password
+            ? `“${name}” updated (password changed).`
+            : `“${name}” updated.`,
+      );
       closeModal();
-      return;
+    } catch (saveError) {
+      setError(saveError.message || "Could not save user.");
+    } finally {
+      setSaving(false);
     }
-
-    if (!editTarget) return;
-
-    setManagers((prev) =>
-      prev.map((item) =>
-        item.id === editTarget.id
-          ? {
-              ...item,
-              name,
-              email,
-              initials: initialsFromName(name),
-              department: form.department,
-              status: form.status,
-              ...(password ? { password } : {}),
-            }
-          : item,
-      ),
-    );
-    flash(
-      password
-        ? `Manager “${name}” updated (password changed).`
-        : `Manager “${name}” updated.`,
-    );
-    closeModal();
   }
 
   function requestDelete(item) {
-    if (!isAdmin || item.role !== "manager") return;
+    if (!isAdmin) return;
+    if (
+      String(currentUser?.email || "").toLowerCase() ===
+      String(item.email).toLowerCase()
+    ) {
+      setError("You cannot remove your own account.");
+      return;
+    }
     setDeleteTarget(item);
   }
 
@@ -275,11 +249,25 @@ export default function DashboardManagersPage() {
     setDeleteTarget(null);
   }
 
-  function confirmDelete() {
-    if (!isAdmin || !deleteTarget || deleteTarget.role !== "manager") return;
-    setManagers((prev) => prev.filter((item) => item.id !== deleteTarget.id));
-    flash(`Manager “${deleteTarget.name}” removed.`);
-    setDeleteTarget(null);
+  async function confirmDelete() {
+    if (!isAdmin || !deleteTarget || saving) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/dashboard/users/${deleteTarget.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Could not remove user.");
+      }
+      await loadUsers();
+      flash(`${roleLabel[deleteTarget.role] || "User"} “${deleteTarget.name}” removed.`);
+      setDeleteTarget(null);
+    } catch (deleteError) {
+      setError(deleteError.message || "Could not remove user.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   const filters = [
@@ -289,6 +277,10 @@ export default function DashboardManagersPage() {
     { key: "active", label: "Active", count: counts.active },
     { key: "inactive", label: "Inactive", count: counts.inactive },
   ];
+
+  const isSelf = (item) =>
+    String(currentUser?.email || "").toLowerCase() ===
+    String(item.email).toLowerCase();
 
   return (
     <div className="dashboard-isolate">
@@ -323,13 +315,14 @@ export default function DashboardManagersPage() {
                     <path d="M12 5v14" />
                     <path d="M5 12h14" />
                   </svg>
-                  Add manager
+                  Add user
                 </button>
               ) : null}
             </div>
           </div>
 
           {savedHint ? <p className="db-form-hint db-managers-toast">{savedHint}</p> : null}
+          {error && !modalMode ? <p className="db-manager-add-error">{error}</p> : null}
 
           <div className="db-panel db-articles-filter">
             <div className="db-articles-filter-inner">
@@ -347,14 +340,16 @@ export default function DashboardManagersPage() {
               </div>
               <p className="db-comments-readonly-hint">
                 {isAdmin
-                  ? "Admin access — add, edit, set password, or remove managers."
-                  : "Only admins can manage managers."}
+                  ? "Admin access — add admin or manager accounts, edit details, and set passwords."
+                  : "Only admins can manage users."}
               </p>
             </div>
           </div>
 
           <div className="db-panel">
-            {visible.length === 0 ? (
+            {loading ? (
+              <p className="db-comments-empty">Loading users…</p>
+            ) : visible.length === 0 ? (
               <p className="db-comments-empty">No team members match this filter.</p>
             ) : (
               <div className="db-table-wrap">
@@ -376,7 +371,7 @@ export default function DashboardManagersPage() {
                         <td>
                           <div className="db-people-cell">
                             <span className="db-people-avatar" aria-hidden="true">
-                              {item.initials}
+                              {item.initials || initialsFromName(item.name)}
                             </span>
                             <div>
                               <p className="title">{item.name}</p>
@@ -403,15 +398,17 @@ export default function DashboardManagersPage() {
                         <td>{item.joined}</td>
                         {isAdmin ? (
                           <td className="db-articles-actions-cell">
-                            {item.role === "manager" ? (
-                              <div className="db-row-actions">
-                                <button
-                                  type="button"
-                                  className="db-row-action edit"
-                                  onClick={() => openEdit(item)}
-                                >
-                                  Edit
-                                </button>
+                            <div className="db-row-actions">
+                              <button
+                                type="button"
+                                className="db-row-action edit"
+                                onClick={() => openEdit(item)}
+                              >
+                                Edit
+                              </button>
+                              {isSelf(item) ? (
+                                <span className="db-manager-locked">You</span>
+                              ) : (
                                 <button
                                   type="button"
                                   className="db-row-action delete"
@@ -419,10 +416,8 @@ export default function DashboardManagersPage() {
                                 >
                                   Remove
                                 </button>
-                              </div>
-                            ) : (
-                              <span className="db-manager-locked">Protected</span>
-                            )}
+                              )}
+                            </div>
                           </td>
                         ) : null}
                       </tr>
@@ -451,11 +446,11 @@ export default function DashboardManagersPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="manager-modal-title">
-              {modalMode === "add" ? "Add manager" : "Edit manager"}
+              {modalMode === "add" ? "Add user" : "Edit user"}
             </h3>
             <p className="db-comment-edit-meta">
               {modalMode === "add"
-                ? "Create a manager account and set their login password."
+                ? "Create an admin or manager account and set their login password."
                 : "Update details. Leave password blank to keep the current one."}
             </p>
 
@@ -485,6 +480,18 @@ export default function DashboardManagersPage() {
 
               <div className="db-field-row">
                 <label className="db-field">
+                  Role
+                  <select
+                    className="db-select"
+                    value={form.role}
+                    onChange={(e) => updateField("role", e.target.value)}
+                    disabled={modalMode === "edit" && isSelf(editTarget)}
+                  >
+                    <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </label>
+                <label className="db-field">
                   Department
                   <select
                     className="db-select"
@@ -498,18 +505,19 @@ export default function DashboardManagersPage() {
                     <option>Marketing</option>
                   </select>
                 </label>
-                <label className="db-field">
-                  Status
-                  <select
-                    className="db-select"
-                    value={form.status}
-                    onChange={(e) => updateField("status", e.target.value)}
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </label>
               </div>
+
+              <label className="db-field">
+                Status
+                <select
+                  className="db-select"
+                  value={form.status}
+                  onChange={(e) => updateField("status", e.target.value)}
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </label>
 
               <label className="db-field">
                 {modalMode === "add" ? "Password" : "New password (optional)"}
@@ -552,8 +560,12 @@ export default function DashboardManagersPage() {
                 <button type="button" className="db-secondary-btn" onClick={closeModal}>
                   Cancel
                 </button>
-                <button type="submit" className="db-new-post-btn">
-                  {modalMode === "add" ? "Add manager" : "Save changes"}
+                <button type="submit" className="db-new-post-btn" disabled={saving}>
+                  {saving
+                    ? "Saving…"
+                    : modalMode === "add"
+                      ? "Add user"
+                      : "Save changes"}
                 </button>
               </div>
             </form>
@@ -570,17 +582,22 @@ export default function DashboardManagersPage() {
             aria-labelledby="delete-manager-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 id="delete-manager-title">Remove manager?</h3>
+            <h3 id="delete-manager-title">Remove user?</h3>
             <p>
-              Remove <strong>{deleteTarget.name}</strong> ({deleteTarget.email}) from the
-              managers list? They will lose dashboard access.
+              Remove <strong>{deleteTarget.name}</strong> ({deleteTarget.email})? They
+              will lose dashboard access.
             </p>
             <div className="db-confirm-actions">
               <button type="button" className="db-secondary-btn" onClick={cancelDelete}>
                 Cancel
               </button>
-              <button type="button" className="db-confirm-delete-btn" onClick={confirmDelete}>
-                Remove manager
+              <button
+                type="button"
+                className="db-confirm-delete-btn"
+                onClick={confirmDelete}
+                disabled={saving}
+              >
+                Remove user
               </button>
             </div>
           </div>

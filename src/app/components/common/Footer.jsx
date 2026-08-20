@@ -59,7 +59,7 @@ export default function Footer() {
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 z-40 border-t border-nf-border bg-white/95 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6">
+      <div className="nf-page flex flex-col gap-4 py-5">
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
             <BrandLogo className="text-base" size={24} />
