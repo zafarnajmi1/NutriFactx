@@ -21,10 +21,8 @@ export default async function Blogs() {
     <>
       <PageSeoJsonLd pageKey="blogs" />
       <BannerSection slides={featuredBlogs} />
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-        <h1 className="mb-3.5 font-[family-name:var(--font-fraunces)] text-base font-medium text-nf-text sm:text-lg">
-          All blogs
-        </h1>
+      <div className="nf-page py-8 sm:py-10">
+        <h1 className="nf-section-title mb-3.5">All blogs</h1>
         <BlogsList blogs={blogs} />
       </div>
     </>

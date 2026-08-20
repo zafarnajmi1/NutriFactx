@@ -133,3 +133,12 @@ CREATE INDEX IF NOT EXISTS site_team_members_sort_idx
   ON site_team_members (sort_order ASC, id ASC);
 CREATE INDEX IF NOT EXISTS site_team_members_active_idx
   ON site_team_members (is_active);
+
+CREATE TABLE IF NOT EXISTS site_page_content (
+  page_key TEXT PRIMARY KEY,
+  hero_eyebrow TEXT,
+  hero_title TEXT,
+  hero_description TEXT,
+  sections JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

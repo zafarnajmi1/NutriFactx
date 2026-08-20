@@ -22,7 +22,7 @@ export default async function Home() {
         NutriFactx, science-backed nutrition facts and wellness insights
       </h1>
       <BannerSection slides={featuredBlogs} />
-      <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 sm:py-10">
+      <div className="nf-page space-y-8 py-8 sm:py-10">
         <RecentPosts />
         <LatestBlogs />
       </div>

@@ -5,12 +5,12 @@ const SESSION_KEY = "nf_dashboard_session";
 export const DASHBOARD_USERS = [
   {
     id: "m1",
-    name: "Ayesha Khan",
+    name: "Admin",
     email: "admin@nutrifactx.com",
     password: "admin1234",
     role: "admin",
     title: "Admin",
-    initials: "AK",
+    initials: "AD",
   },
   {
     id: "m2",
@@ -81,6 +81,39 @@ export function loginDashboardUser(email, password) {
   writeCookie(payload);
 
   return { ok: true, user: session };
+}
+
+export function setDashboardSession(user) {
+  const session = toPublicUser(user);
+  if (!session) {
+    return { ok: false, error: "Invalid session user." };
+  }
+
+  const payload = JSON.stringify(session);
+  try {
+    window.localStorage.setItem(SESSION_KEY, payload);
+  } catch {
+    /* ignore */
+  }
+  writeCookie(payload);
+  return { ok: true, user: session };
+}
+
+export async function loginDashboardUserFromApi(email, password) {
+  try {
+    const response = await fetch("/api/dashboard/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return { ok: false, error: data.error || "Invalid email or password." };
+    }
+    return setDashboardSession(data.user);
+  } catch {
+    return loginDashboardUser(email, password);
+  }
 }
 
 export function logoutDashboardUser() {

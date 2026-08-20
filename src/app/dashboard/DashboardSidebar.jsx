@@ -108,6 +108,20 @@ const nav = [
         ),
       },
       {
+        href: "/dashboard/pages",
+        label: "Pages",
+        match: "pages",
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            <path d="M8 7h8" />
+            <path d="M8 11h8" />
+            <path d="M8 15h5" />
+          </svg>
+        ),
+      },
+      {
         href: "/dashboard/team",
         label: "Team",
         match: "team",
@@ -160,6 +174,7 @@ function isActive(item, active) {
   if (item.match === "subscribers") return active === "subscribers";
   if (item.match === "social-media") return active === "social-media";
   if (item.match === "seo") return active === "seo";
+  if (item.match === "pages") return active === "pages";
   if (item.match === "team") return active === "team";
   if (item.match === "managers") return active === "managers";
   return false;
@@ -186,7 +201,7 @@ export default function DashboardSidebar({ active = "dashboard" }) {
         if (user?.role === "manager") {
           return item.match === "articles" || item.match === "comments";
         }
-        if (item.match === "managers" || item.match === "social-media" || item.match === "seo" || item.match === "team") {
+        if (item.match === "managers" || item.match === "social-media" || item.match === "seo" || item.match === "pages" || item.match === "team") {
           return user?.role === "admin";
         }
         return true;

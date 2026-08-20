@@ -76,12 +76,12 @@ export default function BannerSection({ slides = [] }) {
         aria-hidden="true"
       />
 
-      <div className="relative mx-auto flex min-h-[280px] max-w-6xl flex-col justify-center px-4 py-14 sm:min-h-[340px] sm:px-6 md:min-h-[380px]">
+      <div className="nf-page relative flex min-h-[280px] flex-col justify-center py-14 sm:min-h-[340px] md:min-h-[380px]">
         <div key={slide.id} className="nf-animate-fade-up max-w-xl">
           <span className="inline-block rounded-md bg-nf-green-soft px-2.5 py-1 text-xs font-medium text-nf-green-deep">
             Featured
           </span>
-          <h2 className="mt-4 font-[family-name:var(--font-fraunces)] text-3xl font-medium leading-tight tracking-tight sm:text-4xl md:text-[2.55rem]">
+          <h2 className="nf-hero-title mt-4 text-white">
             <Link href={href} className="transition-opacity hover:opacity-90">
               {slide.title}
             </Link>

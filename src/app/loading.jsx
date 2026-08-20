@@ -15,7 +15,7 @@ export default function Loading() {
           }}
           aria-hidden="true"
         />
-        <div className="relative mx-auto max-w-7xl animate-pulse px-4 py-14 sm:px-6 sm:py-16 md:py-20">
+        <div className="nf-page relative animate-pulse py-14 sm:py-16 md:py-20">
           <div className="h-6 w-20 rounded-md bg-white/25" />
           <div className="mt-5 h-10 w-full max-w-xl rounded-lg bg-white/30" />
           <div className="mt-3 h-10 w-4/5 max-w-md rounded-lg bg-white/20" />
@@ -23,7 +23,7 @@ export default function Loading() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl animate-pulse px-4 py-8 sm:px-6 sm:py-10">
+      <div className="nf-page animate-pulse py-8 sm:py-10">
         <div className="mb-4 h-7 w-40 rounded-lg bg-nf-border/80" />
 
         <div className="nf-posts-grid">

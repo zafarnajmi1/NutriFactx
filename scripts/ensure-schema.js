@@ -171,13 +171,27 @@ async function addEnum(type, value) {
       ON site_team_members (sort_order ASC, id ASC);
     CREATE INDEX IF NOT EXISTS site_team_members_active_idx
       ON site_team_members (is_active);
+
+    CREATE TABLE IF NOT EXISTS site_page_content (
+      page_key TEXT PRIMARY KEY,
+      hero_eyebrow TEXT,
+      hero_title TEXT,
+      hero_description TEXT,
+      sections JSONB NOT NULL DEFAULT '[]'::jsonb,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS department TEXT DEFAULT 'Content';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
   `);
 
   await pool.query(`
     INSERT INTO users (name, email, password, user_role)
     SELECT v.name, v.email, v.password, v.role::user_role
     FROM (VALUES
-      ('Ayesha Khan', 'admin@nutrifactx.com', 'admin1234', 'ADMIN'),
+      ('Admin', 'admin@nutrifactx.com', 'admin1234', 'ADMIN'),
       ('Bilal Ahmed', 'bilal@nutrifactx.com', 'manager123', 'MANAGER'),
       ('Hina Noor', 'hina@nutrifactx.com', 'manager123', 'MANAGER')
     ) AS v(name, email, password, role)

@@ -74,7 +74,7 @@ export default function Header() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-nf-border bg-white/95 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
+      <div className="nf-page flex items-center justify-between gap-4 py-3.5">
         <BrandLogo className="shrink-0 text-lg" size={30} />
 
         <nav className="hidden items-center gap-7 text-sm text-nf-secondary md:flex">

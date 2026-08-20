@@ -79,17 +79,17 @@ export default function BlogsCard({
 
       <div className="flex flex-1 flex-col p-4">
         <span
-          className={`inline-flex w-fit rounded-full px-2.5 py-0.5 text-[11px] font-medium ${categoryClass}`}
+          className={`inline-flex w-fit rounded-full px-2.5 py-0.5 text-xs font-medium ${categoryClass}`}
         >
           {category}
         </span>
 
-        <h3 className="mt-3 text-[14px] font-semibold leading-snug text-[#111111] sm:text-[15px]">
+        <h3 className="mt-3 text-sm font-semibold leading-snug text-[#111111] sm:text-base">
           {title}
         </h3>
 
         {excerpt ? (
-          <p className="mt-2 line-clamp-2 text-[12px] leading-relaxed text-[#6b6b6b]">
+          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[#6b6b6b] sm:text-sm">
             {excerpt}
           </p>
         ) : null}
@@ -98,12 +98,12 @@ export default function BlogsCard({
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">
               <span
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#d9d9d9] text-[10px] font-medium text-[#555555]"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#d9d9d9] text-[0.625rem] font-medium text-[#555555]"
                 aria-hidden="true"
               >
                 {initials || "NF"}
               </span>
-              <span className="truncate text-[13px] text-[#5f5f5f]">{author}</span>
+              <span className="truncate text-xs text-[#5f5f5f] sm:text-sm">{author}</span>
             </div>
 
             {date ? (

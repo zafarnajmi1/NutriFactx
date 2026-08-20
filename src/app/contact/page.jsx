@@ -67,6 +67,73 @@ export default async function ContactUs() {
             <ContactForm />
           </div>
         </div>
+
+        <section className="ct-tips" aria-labelledby="ct-tips-title">
+          <div className="ct-tips-head">
+            <span className="ct-tips-eyebrow">While you wait</span>
+            <h2 id="ct-tips-title">Quick health tips from NutriFactx</h2>
+            <p>
+              Small, evidence-minded habits you can start today. For personalised advice,
+              always speak with a qualified healthcare professional.
+            </p>
+          </div>
+
+          <div className="ct-tips-grid">
+            <article className="ct-tip-card">
+              <span className="ct-tip-icon" aria-hidden="true">💧</span>
+              <h3>Stay hydrated</h3>
+              <p>
+                Aim for regular water intake through the day. Thirst, urine colour, and how
+                you feel are simple guides, especially in warmer weather or after exercise.
+              </p>
+            </article>
+
+            <article className="ct-tip-card">
+              <span className="ct-tip-icon" aria-hidden="true">🥗</span>
+              <h3>Eat the rainbow</h3>
+              <p>
+                Include vegetables, fruit, whole grains, and lean protein at most meals.
+                Variety helps you cover a broader range of vitamins, minerals, and fibre.
+              </p>
+            </article>
+
+            <article className="ct-tip-card">
+              <span className="ct-tip-icon" aria-hidden="true">😴</span>
+              <h3>Protect your sleep</h3>
+              <p>
+                Consistent bed and wake times support energy, focus, and recovery. Limit
+                screens before sleep and keep your room cool, dark, and quiet when you can.
+              </p>
+            </article>
+
+            <article className="ct-tip-card">
+              <span className="ct-tip-icon" aria-hidden="true">🚶</span>
+              <h3>Move a little daily</h3>
+              <p>
+                Short walks, stretching, or light activity add up. Even 20–30 minutes of
+                movement most days supports heart health, mood, and metabolic balance.
+              </p>
+            </article>
+
+            <article className="ct-tip-card">
+              <span className="ct-tip-icon" aria-hidden="true">🧘</span>
+              <h3>Manage stress</h3>
+              <p>
+                Breathing exercises, time outdoors, and short breaks can lower daily tension.
+                Chronic stress affects sleep, appetite, and long-term wellbeing.
+              </p>
+            </article>
+
+            <article className="ct-tip-card">
+              <span className="ct-tip-icon" aria-hidden="true">📖</span>
+              <h3>Read trusted sources</h3>
+              <p>
+                Look for articles that cite research, explain limits clearly, and avoid
+                extreme claims. Browse our latest posts for science-backed nutrition insights.
+              </p>
+            </article>
+          </div>
+        </section>
       </div>
     </div>
     </>

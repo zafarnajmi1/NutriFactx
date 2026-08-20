@@ -30,7 +30,7 @@ export default function NotFound() {
         <p className="text-xs font-medium tracking-[0.18em] text-nf-lime uppercase">
           Page not found
         </p>
-        <h1 className="mt-3 font-[family-name:var(--font-fraunces)] text-3xl font-medium tracking-tight text-nf-text sm:text-4xl">
+        <h1 className="nf-hero-title mt-3 text-nf-text">
           This page isn&apos;t on our menu
         </h1>
         <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-nf-secondary sm:text-base">

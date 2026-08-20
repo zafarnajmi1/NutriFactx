@@ -6,9 +6,7 @@ export default function RelatedBlogsScroll({ posts = [] }) {
   return (
     <section className="mt-10 border-t border-nf-border pt-8">
       <div className="mb-4 flex items-end justify-between gap-3">
-        <h2 className="font-[family-name:var(--font-fraunces)] text-xl font-medium text-nf-text">
-          Related blogs
-        </h2>
+        <h2 className="nf-section-title">Related blogs</h2>
         <p className="text-xs text-nf-muted sm:text-sm">Swipe to explore</p>
       </div>
 
