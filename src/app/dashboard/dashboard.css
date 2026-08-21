@@ -1131,33 +1131,6 @@
   height: 40px;
 }
 
-.dashboard-isolate .db-login-demo {
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid var(--db-border);
-}
-
-.dashboard-isolate .db-login-demo .label {
-  margin: 0 0 6px;
-  font-size: 11.6px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--db-ink-faint);
-}
-
-.dashboard-isolate .db-login-demo p {
-  margin: 0 0 4px;
-  color: var(--db-ink-soft);
-  font-size: 12.7px;
-}
-
-.dashboard-isolate .db-login-demo code {
-  font-family: Menlo, Consolas, Monaco, monospace;
-  font-size: 11.6px;
-  color: var(--db-accent-dark);
-}
-
 .dashboard-isolate .db-login-back {
   display: inline-block;
   margin-top: 16px;
