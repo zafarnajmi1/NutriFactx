@@ -128,16 +128,6 @@ function LoginForm() {
             </button>
           </form>
 
-          <div className="db-login-demo">
-            <p className="label">Demo accounts</p>
-            <p>
-              Admin: <code>admin@nutrifactx.com</code> / <code>admin1234</code>
-            </p>
-            <p>
-              Manager: <code>bilal@nutrifactx.com</code> / <code>manager123</code>
-            </p>
-          </div>
-
           <Link href="/" className="db-muted-link db-login-back">
             ← Back to website
           </Link>
