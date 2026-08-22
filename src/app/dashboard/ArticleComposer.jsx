@@ -542,6 +542,11 @@ export default function ArticleComposer({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        if (res.status === 413) {
+          throw new Error(
+            "Article is too large to save. Try fewer/smaller images in content, or use Featured image instead.",
+          );
+        }
         throw new Error(data.error || "Could not save article.");
       }
 

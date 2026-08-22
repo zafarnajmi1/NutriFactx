@@ -7,6 +7,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig = {
   // TipTap's useEditor is incompatible with React Compiler in this setup
   reactCompiler: false,
+  // Allow large article saves when content embeds original images (no pixel compression).
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "50mb",
+    },
+  },
   turbopack: {
     root: __dirname,
   },
