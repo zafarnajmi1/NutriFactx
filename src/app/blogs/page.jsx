@@ -22,7 +22,7 @@ export default async function Blogs() {
       <PageSeoJsonLd pageKey="blogs" />
       <BannerSection slides={featuredBlogs} />
       <div className="nf-page py-8 sm:py-10">
-        <h1 className="nf-section-title mb-3.5">All blogs</h1>
+        <h1 className="nf-section-title mb-3.5">All Posts</h1>
         <BlogsList blogs={blogs} />
       </div>
     </>
