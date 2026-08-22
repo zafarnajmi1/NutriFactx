@@ -198,6 +198,34 @@ async function addEnum(type, value) {
     WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.email = v.email);
   `);
 
+  // Seed About Us team profiles (images already on Cloudflare R2).
+  // Skip any name that already exists so live data is never overwritten.
+  await pool.query(`
+    INSERT INTO site_team_members (name, role, image_url, bio, sort_order, is_active)
+    SELECT v.name, v.role, v.image_url, NULL, v.sort_order, TRUE
+    FROM (VALUES
+      ('Emma Wilson', 'Chief Editor',
+        'https://media.nutrifactx.com/team/2026/08/9c6c0f8d-e7e1-4129-823e-ff90d3da90ce.png', 0),
+      ('Sophia Clarke', 'Medical Content Writer',
+        'https://media.nutrifactx.com/team/2026/08/fb167372-a2f7-4ad0-b445-47ac4315b9b5.jpg', 0),
+      ('Olivia Bennett', 'Fact-Checker / Research Analyst',
+        'https://media.nutrifactx.com/team/2026/08/b17aeb88-780a-4f99-8a89-7c38d66b935b.jpg', 0),
+      ('Daniel Brooks', 'Graphic/Content Designer',
+        'https://media.nutrifactx.com/team/2026/08/576efd6e-7121-44a6-a155-ddbe1f57beb1.jpg', 0),
+      ('Jack Morrison', 'Social Media & Outreach Manager',
+        'https://media.nutrifactx.com/team/2026/08/337ea275-2987-4e64-b180-ba8ae73924e7.jpg', 0),
+      ('Henry Walker', 'Copy Editor',
+        'https://media.nutrifactx.com/team/2026/08/43dd138b-4ed7-421f-a568-8fb179bdcf5d.jpg', 0),
+      ('Amelia Foster', 'Nutrition Writer',
+        'https://media.nutrifactx.com/team/2026/08/75a55c67-1cf0-47b5-b771-6b45800f8b86.jpg', 5),
+      ('James Carter', 'Health & Nutrition Researcher',
+        'https://media.nutrifactx.com/team/2026/08/58a21dba-9fc4-4cda-85ca-d51b055c92a4.jpg', 5)
+    ) AS v(name, role, image_url, sort_order)
+    WHERE NOT EXISTS (
+      SELECT 1 FROM site_team_members t WHERE t.name = v.name
+    );
+  `);
+
   console.log("Schema ensured.");
   await pool.end();
 })().catch((err) => {
