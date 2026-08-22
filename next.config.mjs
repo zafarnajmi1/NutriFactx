@@ -24,6 +24,11 @@ const nextConfig = {
     "@tiptap/extension-image",
     "@tiptap/extension-placeholder",
     "@tiptap/extension-text-align",
+    "@tiptap/extension-underline",
+    "@tiptap/extension-table",
+    "@tiptap/extension-table-row",
+    "@tiptap/extension-table-cell",
+    "@tiptap/extension-table-header",
     "@tiptap/extensions",
   ],
 };
