@@ -47,7 +47,7 @@ const footerLinks = [
   { href: "/contact", label: "Contact" },
   { href: "/privacy-policy", label: "Privacy Policy" },
   { href: "/terms", label: "Terms" },
-  { href: "/blogs", label: "Blogs" },
+  { href: "/blogs", label: "Posts" },
 ];
 
 export default function Footer() {

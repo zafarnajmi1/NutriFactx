@@ -7,7 +7,7 @@ import BrandLogo from "./BrandLogo";
 
 const navLinks = [
   { href: "/", label: "Home" },
-  { href: "/blogs", label: "Blogs" },
+  { href: "/blogs", label: "Posts" },
   { href: "/about-us", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
@@ -126,7 +126,7 @@ export default function Header() {
                     setOpen(true);
                   }}
                   onFocus={() => setOpen(true)}
-                  placeholder="Search blogs..."
+                  placeholder="Search here ..."
                   className="w-40 bg-transparent text-base text-nf-text outline-none placeholder:text-nf-muted lg:w-52"
                   autoComplete="off"
                 />
@@ -213,7 +213,7 @@ export default function Header() {
                     setOpen(true);
                   }}
                   onFocus={() => setOpen(true)}
-                  placeholder="Search blogs..."
+                  placeholder="Search here ..."
                   className="w-full bg-transparent text-sm text-nf-text outline-none placeholder:text-nf-muted"
                   autoComplete="off"
                 />
