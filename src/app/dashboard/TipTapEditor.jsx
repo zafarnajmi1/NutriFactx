@@ -86,6 +86,7 @@ export default function TipTapEditor({
   const canvasDropRef = useRef(null);
   const mediaEditPosRef = useRef(null);
   const openImageEditorRef = useRef(null);
+  const lastEmittedHtmlRef = useRef("");
   const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState("visual");
   const [htmlDraft, setHtmlDraft] = useState("");
@@ -95,6 +96,8 @@ export default function TipTapEditor({
 
   const [mediaOpen, setMediaOpen] = useState(false);
   const [mediaEditing, setMediaEditing] = useState(false);
+  const [mediaUploading, setMediaUploading] = useState(false);
+  const [mediaError, setMediaError] = useState("");
   const [mediaUrl, setMediaUrl] = useState("");
   const [mediaAlt, setMediaAlt] = useState("");
   const [mediaAlign, setMediaAlign] = useState("center");
@@ -145,7 +148,11 @@ export default function TipTapEditor({
         }),
       ],
       content: value || "",
-      onUpdate: ({ editor: ed }) => onChange?.(ed.getHTML()),
+      onUpdate: ({ editor: ed }) => {
+        const html = ed.getHTML();
+        lastEmittedHtmlRef.current = html;
+        onChange?.(html);
+      },
       onSelectionUpdate: () => bump((n) => n + 1),
       editorProps: {
         attributes: {
@@ -160,9 +167,10 @@ export default function TipTapEditor({
           const file = img.getAsFile();
           if (!file) return true;
           readFileAsDataUrl(file).then((src) => {
+            if (!view || view.isDestroyed) return;
             const node = view.state.schema.nodes.image.create({
               src,
-              alt: "",
+              alt: file.name.replace(/\.[^.]+$/, "") || "",
               align: "center",
               width: "70%",
             });
@@ -179,6 +187,7 @@ export default function TipTapEditor({
           event.preventDefault();
           const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
           Promise.all(files.map((f) => readFileAsDataUrl(f))).then((srcs) => {
+            if (view.isDestroyed) return;
             let tr = view.state.tr;
             let insertPos = coords?.pos ?? tr.selection.from;
             srcs.forEach((src, i) => {
@@ -201,10 +210,17 @@ export default function TipTapEditor({
   );
 
   useEffect(() => {
-    if (!editor || editor.isDestroyed || !value) return;
-    if (mode === "visual" && value !== editor.getHTML()) {
-      editor.commands.setContent(value, { emitUpdate: false });
+    if (!editor || editor.isDestroyed) return;
+    if (mode !== "visual") return;
+    const next = value || "";
+    // Ignore echoes of our own onChange to avoid wiping inserted images.
+    if (next === lastEmittedHtmlRef.current) return;
+    if (next === editor.getHTML()) {
+      lastEmittedHtmlRef.current = next;
+      return;
     }
+    editor.commands.setContent(next, { emitUpdate: false });
+    lastEmittedHtmlRef.current = next;
   }, [editor, value, mode]);
 
   function switchMode(next) {
@@ -215,7 +231,9 @@ export default function TipTapEditor({
       return;
     }
     editor.commands.setContent(htmlDraft || "", { emitUpdate: true });
-    onChange?.(editor.getHTML());
+    const html = editor.getHTML();
+    lastEmittedHtmlRef.current = html;
+    onChange?.(html);
     setMode("visual");
   }
 
@@ -227,7 +245,7 @@ export default function TipTapEditor({
   }
 
   function insertMedia() {
-    if (!editor || !mediaUrl.trim() || !mediaAlt.trim()) return;
+    if (!editor || !mediaUrl.trim() || !mediaAlt.trim() || mediaUploading) return;
     const attrs = {
       src: mediaUrl.trim(),
       alt: mediaAlt.trim(),
@@ -244,7 +262,9 @@ export default function TipTapEditor({
             ...attrs,
           }),
         );
-        onChange?.(editor.getHTML());
+        const html = editor.getHTML();
+        lastEmittedHtmlRef.current = html;
+        onChange?.(html);
       }
     } else {
       editor.chain().focus().setImage(attrs).run();
@@ -254,16 +274,30 @@ export default function TipTapEditor({
 
   async function stageMediaFiles(files) {
     const list = [...(files || [])].filter((f) => f.type.startsWith("image/"));
-    if (!list.length) return;
+    if (!list.length) {
+      setMediaError("Please choose an image file (JPG, PNG, WebP, or GIF).");
+      return;
+    }
     const file = list[0];
-    const src = await readFileAsDataUrl(file);
-    setMediaUrl(src);
-    setMediaAlt((prev) => prev.trim() || file.name.replace(/\.[^.]+$/, ""));
+    setMediaError("");
+    setMediaUploading(true);
+    try {
+      const src = await readFileAsDataUrl(file);
+      if (!src) throw new Error("Could not read the selected image.");
+      setMediaUrl(src);
+      setMediaAlt((prev) => prev.trim() || file.name.replace(/\.[^.]+$/, ""));
+    } catch (error) {
+      setMediaError(error.message || "Could not load the selected image.");
+    } finally {
+      setMediaUploading(false);
+    }
   }
 
   function closeMediaModal() {
     mediaEditPosRef.current = null;
     setMediaEditing(false);
+    setMediaUploading(false);
+    setMediaError("");
     setMediaUrl("");
     setMediaAlt("");
     setMediaAlign("center");
@@ -274,6 +308,8 @@ export default function TipTapEditor({
   function openAddMediaModal() {
     mediaEditPosRef.current = null;
     setMediaEditing(false);
+    setMediaUploading(false);
+    setMediaError("");
     setMediaUrl("");
     setMediaAlt("");
     setMediaAlign("center");
@@ -387,7 +423,12 @@ export default function TipTapEditor({
     if (!files.length) return;
     e.preventDefault();
     e.stopPropagation();
-    await insertImagesFromFiles(editor, files, { align: "center", width: "70%" });
+    try {
+      await insertImagesFromFiles(editor, files, { align: "center", width: "70%" });
+    } catch (error) {
+      setMediaError(error.message || "Could not add dropped image.");
+      setMediaOpen(true);
+    }
   }
 
   if (!mounted || !editor) {
@@ -622,22 +663,33 @@ export default function TipTapEditor({
                   e.target.value = "";
                 }}
               />
-              <p>Drop a file to upload or</p>
-              <button type="button" className="wp-primary" onClick={() => fileRef.current?.click()}>
-                Select Files
+              <p>{mediaUploading ? "Loading image…" : "Drop a file to upload or"}</p>
+              <button
+                type="button"
+                className="wp-primary"
+                disabled={mediaUploading}
+                onClick={() => fileRef.current?.click()}
+              >
+                {mediaUploading ? "Loading…" : "Select Files"}
               </button>
-              {mediaUrl ? (
+              {mediaUrl && !mediaUploading ? (
                 <p className="wp-upload-staged">Image ready — add alt text, then click Insert.</p>
               ) : null}
+              {mediaError ? <p className="db-manager-add-error">{mediaError}</p> : null}
             </div>
 
             <div className="wp-field-grid">
               <label>
                 Image URL
                 <input
-                  value={mediaUrl}
+                  value={mediaUrl.startsWith("data:") ? "" : mediaUrl}
                   onChange={(e) => setMediaUrl(e.target.value)}
-                  placeholder="https://..."
+                  placeholder={
+                    mediaUrl.startsWith("data:")
+                      ? "Image loaded from file (saved with article content)"
+                      : "https://..."
+                  }
+                  readOnly={mediaUrl.startsWith("data:")}
                 />
               </label>
               <label>
@@ -676,7 +728,7 @@ export default function TipTapEditor({
               <button
                 type="button"
                 className="wp-primary"
-                disabled={!mediaUrl.trim() || !mediaAlt.trim()}
+                disabled={!mediaUrl.trim() || !mediaAlt.trim() || mediaUploading}
                 onClick={insertMedia}
               >
                 {mediaEditing ? "Update image" : "Insert into post"}
