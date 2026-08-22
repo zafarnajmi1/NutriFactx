@@ -54,6 +54,14 @@ export async function POST(request) {
     );
   } catch (error) {
     console.error("POST /api/posts", error);
-    return Response.json({ error: "Failed to create article" }, { status: 500 });
+    return Response.json(
+      {
+        error:
+          error?.message && String(error.message).slice(0, 200)
+            ? String(error.message).slice(0, 200)
+            : "Failed to create article",
+      },
+      { status: 500 },
+    );
   }
 }

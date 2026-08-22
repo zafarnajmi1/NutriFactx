@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { isLikelyImageFile } from "@/lib/imageUpload";
 import DashboardSidebar from "../DashboardSidebar";
 import "../dashboard.css";
 
@@ -101,15 +102,13 @@ export default function DashboardTeamPage() {
 
   async function handleImageUpload(files) {
     setUploadError("");
-    const file = [...(files || [])].find((item) =>
-      ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(item.type),
-    );
+    const file = [...(files || [])].find((item) => isLikelyImageFile(item));
     if (!file) {
-      setUploadError("Please choose a JPG, PNG, WebP, or GIF image.");
+      setUploadError("Please choose a JPG, PNG, WebP, GIF, AVIF, or BMP image.");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError("Image must be under 5MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError("Image must be under 10MB.");
       return;
     }
 
@@ -434,7 +433,7 @@ export default function DashboardTeamPage() {
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
+                accept="image/*,.jpg,.jpeg,.png,.gif,.webp,.avif,.bmp,.heic,.heif"
                 className="sr-only"
                 disabled={uploading || busy}
                 onChange={(event) => {

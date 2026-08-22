@@ -84,7 +84,15 @@ export async function PATCH(request, { params }) {
     return Response.json({ article: mapPostToDashboard(row) });
   } catch (error) {
     console.error("PATCH /api/posts/[id]", error);
-    return Response.json({ error: "Failed to update article" }, { status: 500 });
+    return Response.json(
+      {
+        error:
+          error?.message && String(error.message).slice(0, 200)
+            ? String(error.message).slice(0, 200)
+            : "Failed to update article",
+      },
+      { status: 500 },
+    );
   }
 }
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import TipTapEditor from "./TipTapEditor";
+import { isLikelyImageFile } from "@/lib/imageUpload";
 
 const SITE_URL = String(
   process.env.NEXT_PUBLIC_SITE_URL || "https://nutrifactx.com",
@@ -405,15 +406,13 @@ export default function ArticleComposer({
 
   async function handleFeaturedUpload(files) {
     setFeaturedError("");
-    const file = [...(files || [])].find((item) =>
-      ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(item.type),
-    );
+    const file = [...(files || [])].find((item) => isLikelyImageFile(item));
     if (!file) {
-      setFeaturedError("Please choose an image file (JPG, PNG, WebP, or GIF).");
+      setFeaturedError("Please choose an image file (JPG, PNG, WebP, GIF, AVIF, or BMP).");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setFeaturedError("Image must be under 5MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      setFeaturedError("Image must be under 10MB.");
       return;
     }
 
@@ -715,7 +714,7 @@ export default function ArticleComposer({
               <input
                 ref={featuredFileRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
+                accept="image/*,.jpg,.jpeg,.png,.gif,.webp,.avif,.bmp,.heic,.heif"
                 hidden
                 disabled={featuredUploading}
                 onChange={(e) => {
@@ -779,7 +778,7 @@ export default function ArticleComposer({
                   >
                     Choose image
                   </button>
-                  <span className="db-field-hint">JPG, PNG, WebP, or GIF · max 5MB</span>
+                    <span className="db-field-hint">JPG, PNG, WebP, GIF, AVIF, or BMP · max 10MB</span>
                 </div>
               )}
               {featuredError ? <p className="db-manager-add-error">{featuredError}</p> : null}
