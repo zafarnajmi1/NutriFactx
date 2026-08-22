@@ -1,7 +1,9 @@
 "use client";
 
 import Placeholder from "@tiptap/extension-placeholder";
+import { TableKit } from "@tiptap/extension-table";
 import TextAlign from "@tiptap/extension-text-align";
+import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -133,6 +135,10 @@ export default function TipTapEditor({
         StarterKit.configure({
           heading: { levels: [1, 2, 3, 4, 5, 6] },
           link: false,
+        }),
+        Underline,
+        TableKit.configure({
+          table: { resizable: true },
         }),
         SeoLink,
         TextAlign.configure({
@@ -486,6 +492,15 @@ export default function TipTapEditor({
               <IconBtn title="Numbered list" active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
                 1≡
               </IconBtn>
+              <IconBtn
+                title="Insert table"
+                active={editor.isActive("table")}
+                onClick={() =>
+                  editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+                }
+              >
+                ⊞
+              </IconBtn>
               <IconBtn title="Blockquote" active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()}>
                 ”
               </IconBtn>
@@ -571,6 +586,56 @@ export default function TipTapEditor({
                 </IconBtn>
                 <IconBtn title="Horizontal line" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
                   ―
+                </IconBtn>
+                <Sep />
+                <IconBtn
+                  title="Add column before"
+                  disabled={!editor.can().addColumnBefore()}
+                  onClick={() => editor.chain().focus().addColumnBefore().run()}
+                >
+                  +│
+                </IconBtn>
+                <IconBtn
+                  title="Add column after"
+                  disabled={!editor.can().addColumnAfter()}
+                  onClick={() => editor.chain().focus().addColumnAfter().run()}
+                >
+                  │+
+                </IconBtn>
+                <IconBtn
+                  title="Delete column"
+                  disabled={!editor.can().deleteColumn()}
+                  onClick={() => editor.chain().focus().deleteColumn().run()}
+                >
+                  −│
+                </IconBtn>
+                <IconBtn
+                  title="Add row before"
+                  disabled={!editor.can().addRowBefore()}
+                  onClick={() => editor.chain().focus().addRowBefore().run()}
+                >
+                  +═
+                </IconBtn>
+                <IconBtn
+                  title="Add row after"
+                  disabled={!editor.can().addRowAfter()}
+                  onClick={() => editor.chain().focus().addRowAfter().run()}
+                >
+                  ═+
+                </IconBtn>
+                <IconBtn
+                  title="Delete row"
+                  disabled={!editor.can().deleteRow()}
+                  onClick={() => editor.chain().focus().deleteRow().run()}
+                >
+                  −═
+                </IconBtn>
+                <IconBtn
+                  title="Delete table"
+                  disabled={!editor.can().deleteTable()}
+                  onClick={() => editor.chain().focus().deleteTable().run()}
+                >
+                  ⊟
                 </IconBtn>
                 <Sep />
                 <IconBtn title="Undo" onClick={() => editor.chain().focus().undo().run()}>
