@@ -81,6 +81,9 @@ export const metadata = {
   alternates: {
     canonical: siteUrl,
   },
+  other: {
+    "p:domain_verify": "872e0c34420e1c72eee44a3988edfa25",
+  },
 };
 
 export const viewport = {
