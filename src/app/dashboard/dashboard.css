@@ -1873,6 +1873,28 @@
   cursor: grabbing;
 }
 
+.dashboard-isolate .wp-image-edit {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 7;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid #c3c4c7;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1d2327;
+  font-size: 12.3px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-isolate .wp-image-edit:hover {
+  border-color: #2271b1;
+  color: #2271b1;
+}
+
 .dashboard-isolate .wp-resizer img {
   width: 100%;
   border-radius: 2px;
@@ -2187,6 +2209,12 @@
 
 .dashboard-isolate .wp-upload-box p {
   margin: 0 0 12px;
+}
+
+.dashboard-isolate .wp-upload-box .wp-upload-staged {
+  margin: 12px 0 0;
+  color: #2271b1;
+  font-size: 12.3px;
 }
 
 .dashboard-isolate .wp-field-grid {

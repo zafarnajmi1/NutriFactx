@@ -11,10 +11,15 @@ import { SeoLink, buildLinkAttrs, detectLinkType } from "./tiptap/SeoLink";
 
 const FONT_SIZES = ["12px", "14px", "16px", "18px", "20px", "24px", "28px", "32px", "36px"];
 
-const WpImage = ResizableImage.configure({
-  allowBase64: true,
-  inline: false,
-});
+function widthToSizeLabel(width) {
+  const raw = String(width || "").trim();
+  const pct = raw.endsWith("%") ? parseFloat(raw) : NaN;
+  if (pct > 0 && pct <= 30) return "thumbnail";
+  if (pct > 30 && pct <= 55) return "medium";
+  if (pct > 55 && pct <= 85) return "large";
+  if (pct > 85) return "full";
+  return "large";
+}
 
 function IconBtn({ title, active, disabled, onClick, children }) {
   return (
@@ -79,6 +84,8 @@ export default function TipTapEditor({
 }) {
   const fileRef = useRef(null);
   const canvasDropRef = useRef(null);
+  const mediaEditPosRef = useRef(null);
+  const openImageEditorRef = useRef(null);
   const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState("visual");
   const [htmlDraft, setHtmlDraft] = useState("");
@@ -87,6 +94,7 @@ export default function TipTapEditor({
   const [draggingOver, setDraggingOver] = useState(false);
 
   const [mediaOpen, setMediaOpen] = useState(false);
+  const [mediaEditing, setMediaEditing] = useState(false);
   const [mediaUrl, setMediaUrl] = useState("");
   const [mediaAlt, setMediaAlt] = useState("");
   const [mediaAlign, setMediaAlign] = useState("center");
@@ -105,6 +113,16 @@ export default function TipTapEditor({
 
   useEffect(() => setMounted(true), []);
 
+  openImageEditorRef.current = ({ src, alt, align, width, pos }) => {
+    mediaEditPosRef.current = typeof pos === "number" ? pos : null;
+    setMediaEditing(true);
+    setMediaUrl(String(src || ""));
+    setMediaAlt(String(alt || ""));
+    setMediaAlign(align || "center");
+    setMediaSize(widthToSizeLabel(width));
+    setMediaOpen(true);
+  };
+
   const editor = useEditor(
     {
       immediatelyRender: false,
@@ -120,7 +138,11 @@ export default function TipTapEditor({
         }),
         Placeholder.configure({ placeholder }),
         FontSize,
-        WpImage,
+        ResizableImage.configure({
+          allowBase64: true,
+          inline: false,
+          getOnEdit: () => openImageEditorRef.current,
+        }),
       ],
       content: value || "",
       onUpdate: ({ editor: ed }) => onChange?.(ed.getHTML()),
@@ -205,17 +227,43 @@ export default function TipTapEditor({
   }
 
   function insertMedia() {
-    if (!editor || !mediaUrl.trim()) return;
-    editor
-      .chain()
-      .focus()
-      .setImage({
-        src: mediaUrl.trim(),
-        alt: mediaAlt.trim(),
-        align: mediaAlign,
-        width: sizeToWidth(mediaSize),
-      })
-      .run();
+    if (!editor || !mediaUrl.trim() || !mediaAlt.trim()) return;
+    const attrs = {
+      src: mediaUrl.trim(),
+      alt: mediaAlt.trim(),
+      align: mediaAlign,
+      width: sizeToWidth(mediaSize),
+    };
+    const editPos = mediaEditPosRef.current;
+    if (editPos != null) {
+      const node = editor.state.doc.nodeAt(editPos);
+      if (node?.type.name === "image") {
+        editor.view.dispatch(
+          editor.state.tr.setNodeMarkup(editPos, undefined, {
+            ...node.attrs,
+            ...attrs,
+          }),
+        );
+        onChange?.(editor.getHTML());
+      }
+    } else {
+      editor.chain().focus().setImage(attrs).run();
+    }
+    closeMediaModal();
+  }
+
+  async function stageMediaFiles(files) {
+    const list = [...(files || [])].filter((f) => f.type.startsWith("image/"));
+    if (!list.length) return;
+    const file = list[0];
+    const src = await readFileAsDataUrl(file);
+    setMediaUrl(src);
+    setMediaAlt((prev) => prev.trim() || file.name.replace(/\.[^.]+$/, ""));
+  }
+
+  function closeMediaModal() {
+    mediaEditPosRef.current = null;
+    setMediaEditing(false);
     setMediaUrl("");
     setMediaAlt("");
     setMediaAlign("center");
@@ -223,12 +271,23 @@ export default function TipTapEditor({
     setMediaOpen(false);
   }
 
-  async function uploadFiles(files) {
-    await insertImagesFromFiles(editor, files, {
-      align: mediaAlign,
-      width: sizeToWidth(mediaSize),
-    });
-    setMediaOpen(false);
+  function openAddMediaModal() {
+    mediaEditPosRef.current = null;
+    setMediaEditing(false);
+    setMediaUrl("");
+    setMediaAlt("");
+    setMediaAlign("center");
+    setMediaSize("large");
+    setMediaOpen(true);
+  }
+
+  function onMediaModalKeyDown(e) {
+    // Inputs sit inside the article <form>; Enter must not submit the page.
+    if (e.key !== "Enter") return;
+    if (e.target instanceof HTMLTextAreaElement) return;
+    if (e.target instanceof HTMLButtonElement) return;
+    e.preventDefault();
+    e.stopPropagation();
   }
 
   const openLinkModal = useCallback(() => {
@@ -410,7 +469,7 @@ export default function TipTapEditor({
               >
                 ⛓̸
               </IconBtn>
-              <IconBtn title="Add Media" onClick={() => setMediaOpen(true)}>
+              <IconBtn title="Add Media" onClick={openAddMediaModal}>
                 🖼
               </IconBtn>
               <Sep />
@@ -519,11 +578,18 @@ export default function TipTapEditor({
       </div>
 
       {mediaOpen ? (
-        <div className="wp-modal">
-          <div className="wp-modal-card">
+        <div className="wp-modal" onMouseDown={(e) => e.stopPropagation()}>
+          <div
+            className="wp-modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="wp-add-media-title"
+            onKeyDown={onMediaModalKeyDown}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             <div className="wp-modal-head">
-              <h3>Add Media</h3>
-              <button type="button" className="wp-modal-close" onClick={() => setMediaOpen(false)}>
+              <h3 id="wp-add-media-title">{mediaEditing ? "Edit Media" : "Add Media"}</h3>
+              <button type="button" className="wp-modal-close" onClick={closeMediaModal}>
                 ×
               </button>
             </div>
@@ -543,34 +609,45 @@ export default function TipTapEditor({
               onDrop={(e) => {
                 e.preventDefault();
                 e.currentTarget.classList.remove("is-drag");
-                uploadFiles(e.dataTransfer.files);
+                stageMediaFiles(e.dataTransfer.files);
               }}
             >
               <input
                 ref={fileRef}
                 type="file"
                 accept="image/*"
-                multiple
                 hidden
                 onChange={(e) => {
-                  uploadFiles(e.target.files);
+                  stageMediaFiles(e.target.files);
                   e.target.value = "";
                 }}
               />
-              <p>Drop files to upload or</p>
+              <p>Drop a file to upload or</p>
               <button type="button" className="wp-primary" onClick={() => fileRef.current?.click()}>
                 Select Files
               </button>
+              {mediaUrl ? (
+                <p className="wp-upload-staged">Image ready — add alt text, then click Insert.</p>
+              ) : null}
             </div>
 
             <div className="wp-field-grid">
               <label>
                 Image URL
-                <input value={mediaUrl} onChange={(e) => setMediaUrl(e.target.value)} placeholder="https://..." />
+                <input
+                  value={mediaUrl}
+                  onChange={(e) => setMediaUrl(e.target.value)}
+                  placeholder="https://..."
+                />
               </label>
               <label>
                 Alt text
-                <input value={mediaAlt} onChange={(e) => setMediaAlt(e.target.value)} placeholder="Describe the image" />
+                <input
+                  value={mediaAlt}
+                  onChange={(e) => setMediaAlt(e.target.value)}
+                  placeholder="Describe the image"
+                  required
+                />
               </label>
               <label>
                 Alignment
@@ -593,11 +670,16 @@ export default function TipTapEditor({
             </div>
 
             <div className="wp-modal-actions">
-              <button type="button" className="wp-secondary" onClick={() => setMediaOpen(false)}>
+              <button type="button" className="wp-secondary" onClick={closeMediaModal}>
                 Cancel
               </button>
-              <button type="button" className="wp-primary" disabled={!mediaUrl.trim()} onClick={insertMedia}>
-                Insert into post
+              <button
+                type="button"
+                className="wp-primary"
+                disabled={!mediaUrl.trim() || !mediaAlt.trim()}
+                onClick={insertMedia}
+              >
+                {mediaEditing ? "Update image" : "Insert into post"}
               </button>
             </div>
           </div>

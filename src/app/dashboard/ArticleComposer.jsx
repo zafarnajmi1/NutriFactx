@@ -342,6 +342,19 @@ export default function ArticleComposer({
   });
   const [featuredError, setFeaturedError] = useState("");
   const [featuredUploading, setFeaturedUploading] = useState(false);
+  // Once a social field is edited by hand, stop overwriting it from SEO fields.
+  const [socialTouched, setSocialTouched] = useState({
+    ogTitle: Boolean(initialForm?.ogTitle),
+    ogDescription: Boolean(initialForm?.ogDescription),
+    twitterTitle: Boolean(initialForm?.twitterTitle),
+    twitterDescription: Boolean(initialForm?.twitterDescription),
+  });
+
+  function markSocialTouched(field) {
+    setSocialTouched((prev) =>
+      prev[field] ? prev : { ...prev, [field]: true },
+    );
+  }
 
   function update(field, value) {
     setForm((prev) => {
@@ -355,6 +368,25 @@ export default function ArticleComposer({
       ) {
         next.canonicalUrl = canonicalUrlForSlug(next.slug);
       }
+
+      // One-way only: SEO → social. Editing social fields never changes SEO.
+      if (field === "metaTitle") {
+        if (!socialTouched.ogTitle) next.ogTitle = value;
+        if (!socialTouched.twitterTitle) next.twitterTitle = value;
+      }
+      if (field === "metaDescription") {
+        if (!socialTouched.ogDescription) next.ogDescription = value;
+        if (!socialTouched.twitterDescription) next.twitterDescription = value;
+      }
+      if (field === "title" && !String(prev.metaTitle || "").trim()) {
+        if (!socialTouched.ogTitle) next.ogTitle = value;
+        if (!socialTouched.twitterTitle) next.twitterTitle = value;
+      }
+      if (field === "excerpt" && !String(prev.metaDescription || "").trim()) {
+        if (!socialTouched.ogDescription) next.ogDescription = value;
+        if (!socialTouched.twitterDescription) next.twitterDescription = value;
+      }
+
       return next;
     });
   }
@@ -399,10 +431,35 @@ export default function ArticleComposer({
       }
 
       const previousImage = form.featuredImage;
-      uploadedFeaturedRef.current.add(data.url);
-      update("featuredImage", data.url);
-      update("featuredImageName", data.name || file.name);
-      setFeaturedName(data.name || file.name);
+      const imageUrl = data.url;
+      const fileLabel = data.name || file.name;
+      uploadedFeaturedRef.current.add(imageUrl);
+      setFeaturedName(fileLabel);
+      setForm((prev) => {
+        const titleSource = String(prev.metaTitle || prev.title || "").trim();
+        const descSource = String(
+          prev.metaDescription || prev.excerpt || prev.ogDescription || "",
+        ).trim();
+        return {
+          ...prev,
+          featuredImage: imageUrl,
+          featuredImageName: fileLabel,
+          ogImage: imageUrl,
+          twitterImage: imageUrl,
+          ogTitle: socialTouched.ogTitle
+            ? prev.ogTitle
+            : titleSource || prev.ogTitle,
+          twitterTitle: socialTouched.twitterTitle
+            ? prev.twitterTitle
+            : titleSource || prev.twitterTitle,
+          twitterDescription: socialTouched.twitterDescription
+            ? prev.twitterDescription
+            : descSource || prev.twitterDescription,
+          ogDescription: socialTouched.ogDescription
+            ? prev.ogDescription
+            : descSource || prev.ogDescription,
+        };
+      });
       if (uploadedFeaturedRef.current.has(previousImage)) {
         try {
           await deleteUploadedFeaturedImage(previousImage);
@@ -812,7 +869,10 @@ export default function ArticleComposer({
                 <input
                   className="db-input"
                   value={form.ogTitle}
-                  onChange={(e) => update("ogTitle", e.target.value)}
+                  onChange={(e) => {
+                    markSocialTouched("ogTitle");
+                    update("ogTitle", e.target.value);
+                  }}
                   placeholder="Defaults to SEO title"
                 />
               </label>
@@ -837,7 +897,10 @@ export default function ArticleComposer({
               <textarea
                 className="db-textarea"
                 value={form.ogDescription}
-                onChange={(e) => update("ogDescription", e.target.value)}
+                onChange={(e) => {
+                  markSocialTouched("ogDescription");
+                  update("ogDescription", e.target.value);
+                }}
                 rows={2}
                 placeholder="Defaults to meta description"
               />
@@ -859,7 +922,10 @@ export default function ArticleComposer({
                 <input
                   className="db-input"
                   value={form.twitterTitle}
-                  onChange={(e) => update("twitterTitle", e.target.value)}
+                  onChange={(e) => {
+                    markSocialTouched("twitterTitle");
+                    update("twitterTitle", e.target.value);
+                  }}
                   placeholder="Defaults to Open Graph title"
                 />
               </label>
@@ -879,7 +945,10 @@ export default function ArticleComposer({
               <textarea
                 className="db-textarea"
                 value={form.twitterDescription}
-                onChange={(e) => update("twitterDescription", e.target.value)}
+                onChange={(e) => {
+                  markSocialTouched("twitterDescription");
+                  update("twitterDescription", e.target.value);
+                }}
                 rows={2}
                 placeholder="Defaults to Open Graph description"
               />

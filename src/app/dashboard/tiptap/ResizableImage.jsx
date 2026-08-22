@@ -52,16 +52,27 @@ function moveNode(editor, direction) {
   }
 }
 
-function ResizableImageView({ node, updateAttributes, selected, deleteNode, editor, getPos }) {
+function ResizableImageView({
+  node,
+  updateAttributes,
+  selected,
+  deleteNode,
+  editor,
+  getPos,
+  extension,
+}) {
   const wrapRef = useRef(null);
   const resizing = useRef(null);
   const livePctRef = useRef(null);
   const [livePct, setLivePct] = useState(null);
   const [parentW, setParentW] = useState(680);
   const [dims, setDims] = useState({ w: 0, h: 0 });
+  // Keep the same first-select controls available on every click until click-away.
+  const [pinned, setPinned] = useState(false);
 
   const align = node.attrs.align || "center";
   const widthPct = livePct ?? widthToPct(node.attrs.width, parentW);
+  const showControls = selected || pinned;
 
   const measure = useCallback(() => {
     const editorEl = wrapRef.current?.closest(".ProseMirror");
@@ -77,7 +88,22 @@ function ResizableImageView({ node, updateAttributes, selected, deleteNode, edit
 
   useEffect(() => {
     measure();
-  }, [widthPct, measure, node.attrs.src, selected]);
+  }, [widthPct, measure, node.attrs.src, showControls]);
+
+  useEffect(() => {
+    if (selected) setPinned(true);
+  }, [selected]);
+
+  useEffect(() => {
+    function onPointerDown(event) {
+      if (!pinned) return;
+      const root = wrapRef.current?.closest(".wp-resizer");
+      if (root && root.contains(event.target)) return;
+      setPinned(false);
+    }
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => document.removeEventListener("pointerdown", onPointerDown, true);
+  }, [pinned]);
 
   useEffect(() => {
     function onMove(event) {
@@ -137,29 +163,89 @@ function ResizableImageView({ node, updateAttributes, selected, deleteNode, edit
 
   function selectSelf() {
     const pos = typeof getPos === "function" ? getPos() : null;
-    if (pos == null || !editor) return;
-    editor.commands.setNodeSelection(pos);
+    if (pos == null || !editor || editor.isDestroyed) return;
+    try {
+      const { state, view } = editor;
+      const selection = NodeSelection.create(state.doc, pos);
+      view.dispatch(state.tr.setSelection(selection));
+      view.focus();
+    } catch {
+      editor.chain().focus().setNodeSelection(pos).run();
+    }
   }
 
   function move(direction) {
     selectSelf();
+    setPinned(true);
     moveNode(editor, direction);
+  }
+
+  function openEdit(event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    selectSelf();
+    setPinned(true);
+    const onEdit = extension?.options?.getOnEdit?.();
+    if (typeof onEdit !== "function") return;
+    const pos = typeof getPos === "function" ? getPos() : null;
+    onEdit({
+      src: node.attrs.src || "",
+      alt: node.attrs.alt || "",
+      align: node.attrs.align || "center",
+      width: node.attrs.width || "70%",
+      pos,
+    });
+  }
+
+  function onImagePointerDown(event) {
+    if (event.button !== 0) return;
+    if (event.target.closest(".wp-handle, .wp-image-edit, .wp-drag-grip, .wp-resizer-bar")) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    selectSelf();
+    setPinned(true);
   }
 
   return (
     <NodeViewWrapper
-      className={`wp-resizer align-${align}${selected ? " is-selected" : ""}`}
+      className={`wp-resizer align-${align}${showControls ? " is-selected" : ""}`}
       style={{ width: `${widthPct}%` }}
     >
-      <div className="wp-resizer-inner" ref={wrapRef} onClick={selectSelf}>
+      <div
+        className="wp-resizer-inner"
+        ref={wrapRef}
+        onMouseDown={onImagePointerDown}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          selectSelf();
+          setPinned(true);
+        }}
+        onDoubleClick={openEdit}
+      >
         <span className="wp-drag-grip" data-drag-handle title="Drag to move image" contentEditable={false}>
           ⋮⋮
         </span>
+        <button
+          type="button"
+          className="wp-image-edit"
+          title="Edit image / alt text"
+          contentEditable={false}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          onClick={openEdit}
+        >
+          Edit
+        </button>
 
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={node.attrs.src} alt={node.attrs.alt || ""} draggable={false} />
 
-        {selected ? (
+        {showControls ? (
           <>
             <span className="wp-resizer-frame" aria-hidden="true" />
             {HANDLES.map((dir) => (
@@ -177,11 +263,15 @@ function ResizableImageView({ node, updateAttributes, selected, deleteNode, edit
         ) : null}
       </div>
 
-      {selected ? (
+      {showControls ? (
         <div
           className="wp-resizer-bar"
           contentEditable={false}
-          onMouseDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setPinned(true);
+          }}
         >
           <div className="wp-resizer-group" title="Move">
             <button type="button" title="Move up" onClick={() => move("up")}>↑</button>
@@ -225,6 +315,9 @@ function ResizableImageView({ node, updateAttributes, selected, deleteNode, edit
               onChange={(e) => updateAttributes({ width: `${e.target.value}%` })}
             />
           </div>
+          <button type="button" title="Edit image / alt text" onClick={openEdit}>
+            Edit
+          </button>
           <button type="button" className="danger" onClick={deleteNode}>
             Remove
           </button>
@@ -237,6 +330,13 @@ function ResizableImageView({ node, updateAttributes, selected, deleteNode, edit
 export const ResizableImage = Image.extend({
   name: "image",
   draggable: true,
+
+  addOptions() {
+    return {
+      ...this.parent?.(),
+      getOnEdit: null,
+    };
+  },
 
   addAttributes() {
     return {
