@@ -45,35 +45,48 @@ function Sep() {
   return <span className="wp-sep" />;
 }
 
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+async function uploadContentImage(file) {
+  if (!file) throw new Error("Please choose an image file.");
+  if (file.size > 10 * 1024 * 1024) {
+    throw new Error("Image must be under 10MB.");
+  }
+  const body = new FormData();
+  body.append("file", file);
+  const response = await fetch("/api/uploads/content", {
+    method: "POST",
+    body,
   });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || "Could not upload content image.");
+  }
+  if (!data.url) throw new Error("Upload did not return an image URL.");
+  return {
+    url: String(data.url),
+    name: String(data.name || file.name || "image").slice(0, 255),
+  };
 }
 
-function insertImagesFromFiles(editor, files, { align = "center", width = "70%" } = {}) {
-  const list = [...(files || [])].filter((f) => f.type.startsWith("image/"));
-  if (!editor || !list.length) return Promise.resolve(0);
+async function insertImagesFromFiles(editor, files, { align = "center", width = "70%" } = {}) {
+  const list = [...(files || [])].filter(
+    (f) => f.type.startsWith("image/") || /\.(jpe?g|png|gif|webp|avif|bmp)$/i.test(f.name || ""),
+  );
+  if (!editor || !list.length) return 0;
 
-  return Promise.all(list.map((file) => readFileAsDataUrl(file))).then((srcs) => {
-    srcs.forEach((src, i) => {
-      const file = list[i];
-      editor
-        .chain()
-        .focus()
-        .setImage({
-          src,
-          alt: file.name.replace(/\.[^.]+$/, ""),
-          align,
-          width,
-        })
-        .run();
-    });
-    return srcs.length;
-  });
+  for (const file of list) {
+    const { url, name } = await uploadContentImage(file);
+    editor
+      .chain()
+      .focus()
+      .setImage({
+        src: url,
+        alt: name.replace(/\.[^.]+$/, ""),
+        align,
+        width,
+      })
+      .run();
+  }
+  return list.length;
 }
 
 /**
@@ -88,6 +101,7 @@ export default function TipTapEditor({
   const canvasDropRef = useRef(null);
   const mediaEditPosRef = useRef(null);
   const openImageEditorRef = useRef(null);
+  const uploadContentImageRef = useRef(uploadContentImage);
   const lastEmittedHtmlRef = useRef("");
   const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState("visual");
@@ -117,6 +131,7 @@ export default function TipTapEditor({
   const linkRangeRef = useRef(null);
 
   useEffect(() => setMounted(true), []);
+  uploadContentImageRef.current = uploadContentImage;
 
   openImageEditorRef.current = ({ src, alt, align, width, pos }) => {
     mediaEditPosRef.current = typeof pos === "number" ? pos : null;
@@ -172,42 +187,54 @@ export default function TipTapEditor({
           event.preventDefault();
           const file = img.getAsFile();
           if (!file) return true;
-          readFileAsDataUrl(file).then((src) => {
-            if (!view || view.isDestroyed) return;
-            const node = view.state.schema.nodes.image.create({
-              src,
-              alt: file.name.replace(/\.[^.]+$/, "") || "",
-              align: "center",
-              width: "70%",
+          const upload = uploadContentImageRef.current;
+          Promise.resolve(upload(file))
+            .then(({ url }) => {
+              if (!view || view.isDestroyed) return;
+              const node = view.state.schema.nodes.image.create({
+                src: url,
+                alt: file.name.replace(/\.[^.]+$/, "") || "",
+                align: "center",
+                width: "70%",
+              });
+              view.dispatch(view.state.tr.replaceSelectionWith(node));
+            })
+            .catch((err) => {
+              console.error("Paste image upload failed", err);
             });
-            view.dispatch(view.state.tr.replaceSelectionWith(node));
-          });
           return true;
         },
         handleDrop(view, event, _slice, moved) {
           if (moved) return false;
-          const files = [...(event.dataTransfer?.files || [])].filter((f) =>
-            f.type.startsWith("image/"),
+          const files = [...(event.dataTransfer?.files || [])].filter(
+            (f) =>
+              f.type.startsWith("image/") ||
+              /\.(jpe?g|png|gif|webp|avif|bmp)$/i.test(f.name || ""),
           );
           if (!files.length) return false;
           event.preventDefault();
           const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
-          Promise.all(files.map((f) => readFileAsDataUrl(f))).then((srcs) => {
-            if (view.isDestroyed) return;
-            let tr = view.state.tr;
-            let insertPos = coords?.pos ?? tr.selection.from;
-            srcs.forEach((src, i) => {
-              const node = view.state.schema.nodes.image.create({
-                src,
-                alt: files[i].name.replace(/\.[^.]+$/, ""),
-                align: "center",
-                width: "70%",
+          const upload = uploadContentImageRef.current;
+          Promise.all(files.map((f) => upload(f)))
+            .then((uploaded) => {
+              if (view.isDestroyed) return;
+              let tr = view.state.tr;
+              let insertPos = coords?.pos ?? tr.selection.from;
+              uploaded.forEach(({ url }, i) => {
+                const node = view.state.schema.nodes.image.create({
+                  src: url,
+                  alt: files[i].name.replace(/\.[^.]+$/, ""),
+                  align: "center",
+                  width: "70%",
+                });
+                tr = tr.insert(insertPos, node);
+                insertPos += node.nodeSize;
               });
-              tr = tr.insert(insertPos, node);
-              insertPos += node.nodeSize;
+              view.dispatch(tr.scrollIntoView());
+            })
+            .catch((err) => {
+              console.error("Drop image upload failed", err);
             });
-            view.dispatch(tr.scrollIntoView());
-          });
           return true;
         },
       },
@@ -279,7 +306,11 @@ export default function TipTapEditor({
   }
 
   async function stageMediaFiles(files) {
-    const list = [...(files || [])].filter((f) => f.type.startsWith("image/"));
+    const list = [...(files || [])].filter(
+      (f) =>
+        f.type.startsWith("image/") ||
+        /\.(jpe?g|png|gif|webp|avif|bmp)$/i.test(f.name || ""),
+    );
     if (!list.length) {
       setMediaError("Please choose an image file (JPG, PNG, WebP, or GIF).");
       return;
@@ -288,12 +319,11 @@ export default function TipTapEditor({
     setMediaError("");
     setMediaUploading(true);
     try {
-      const src = await readFileAsDataUrl(file);
-      if (!src) throw new Error("Could not read the selected image.");
-      setMediaUrl(src);
-      setMediaAlt((prev) => prev.trim() || file.name.replace(/\.[^.]+$/, ""));
+      const { url, name } = await uploadContentImage(file);
+      setMediaUrl(url);
+      setMediaAlt((prev) => prev.trim() || name.replace(/\.[^.]+$/, ""));
     } catch (error) {
-      setMediaError(error.message || "Could not load the selected image.");
+      setMediaError(error.message || "Could not upload the selected image.");
     } finally {
       setMediaUploading(false);
     }
@@ -728,14 +758,14 @@ export default function TipTapEditor({
                   e.target.value = "";
                 }}
               />
-              <p>{mediaUploading ? "Loading image…" : "Drop a file to upload or"}</p>
+              <p>{mediaUploading ? "Uploading to cloud…" : "Drop a file to upload or"}</p>
               <button
                 type="button"
                 className="wp-primary"
                 disabled={mediaUploading}
                 onClick={() => fileRef.current?.click()}
               >
-                {mediaUploading ? "Loading…" : "Select Files"}
+                {mediaUploading ? "Uploading…" : "Select Files"}
               </button>
               {mediaUrl && !mediaUploading ? (
                 <p className="wp-upload-staged">Image ready — add alt text, then click Insert.</p>
@@ -751,8 +781,8 @@ export default function TipTapEditor({
                   onChange={(e) => setMediaUrl(e.target.value)}
                   placeholder={
                     mediaUrl.startsWith("data:")
-                      ? "Image loaded from file (saved with article content)"
-                      : "https://..."
+                      ? "Legacy embedded image — re-upload to store on Cloudflare"
+                      : "https://media.nutrifactx.com/…"
                   }
                   readOnly={mediaUrl.startsWith("data:")}
                 />
