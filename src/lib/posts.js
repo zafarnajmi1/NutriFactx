@@ -99,6 +99,17 @@ export function mapPostToBlog(row) {
   };
 }
 
+/** Card/list shape — never includes full HTML body. */
+export function mapPostToBlogCard(row) {
+  if (!row) return null;
+  const blog = mapPostToBlog({ ...row, content: row.excerpt || "" });
+  return {
+    ...blog,
+    contentHtml: "",
+    readTime: readingTimeFromHtml(row.excerpt || ""),
+  };
+}
+
 /** Map DB row → dashboard article list/form shape */
 export function mapPostToDashboard(row) {
   if (!row) return null;
@@ -139,6 +150,30 @@ export function mapPostToDashboard(row) {
   };
 }
 
+/** Lightweight map for dashboard articles table (no HTML body). */
+export function mapPostToDashboardList(row) {
+  if (!row) return null;
+  return {
+    id: String(row.id),
+    title: row.title,
+    slug: row.slug,
+    cat: row.category,
+    category: row.category,
+    author: row.author_name || "",
+    status: STATUS_TO_UI[row.status] || "draft",
+    date: formatDateShort(row.published_at || row.updated_at || row.created_at),
+    views: formatViews(row.views),
+    viewsRaw: Number(row.views) || 0,
+    image: row.featured_image || "",
+    featuredImage: row.featured_image || "",
+    excerpt: row.excerpt || "",
+    isFeatured: Boolean(row.is_featured),
+    publishedAt: row.published_at,
+    updatedAt: row.updated_at,
+    createdAt: row.created_at,
+  };
+}
+
 const POST_SELECT = `
   SELECT
     p.*,
@@ -146,6 +181,56 @@ const POST_SELECT = `
     u.email AS author_email
   FROM posts p
   LEFT JOIN users u ON u.id = p.author_id
+`;
+
+/** List columns only — excludes heavy content HTML / base64 images. */
+const POST_LIST_SELECT = `
+  SELECT
+    p.id,
+    p.title,
+    p.slug,
+    p.category,
+    p.author_name,
+    p.status,
+    p.published_at,
+    p.updated_at,
+    p.created_at,
+    p.views,
+    p.featured_image,
+    p.excerpt,
+    p.is_featured
+  FROM posts p
+`;
+
+/** Public card/list columns — excludes content HTML body. */
+const POST_CARD_SELECT = `
+  SELECT
+    p.id,
+    p.title,
+    p.slug,
+    p.excerpt,
+    p.category,
+    p.author_name,
+    p.published_at,
+    p.created_at,
+    p.updated_at,
+    p.featured_image,
+    p.tags,
+    p.is_featured,
+    p.meta_title,
+    p.meta_description,
+    p.focus_keyword,
+    p.canonical_url,
+    p.og_title,
+    p.og_description,
+    p.og_image,
+    p.twitter_title,
+    p.twitter_description,
+    p.twitter_image,
+    p.no_index,
+    p.robots_follow,
+    p.schema_type
+  FROM posts p
 `;
 
 /** Owning dashboard account for the post. The public byline is stored separately. */
@@ -173,19 +258,19 @@ export async function listAllPosts({ status } = {}) {
     where = `WHERE p.status = $1`;
   }
   const { rows } = await pool.query(
-    `${POST_SELECT} ${where} ORDER BY COALESCE(p.published_at, p.created_at) DESC, p.id DESC`,
+    `${POST_LIST_SELECT} ${where} ORDER BY COALESCE(p.published_at, p.created_at) DESC, p.id DESC`,
     params,
   );
-  return rows.map(mapPostToDashboard);
+  return rows.map(mapPostToDashboardList);
 }
 
 export async function listPublishedPosts() {
   const { rows } = await pool.query(
-    `${POST_SELECT}
+    `${POST_CARD_SELECT}
      WHERE p.status = 'PUBLISHED'
      ORDER BY COALESCE(p.published_at, p.created_at) DESC, p.id DESC`,
   );
-  return rows.map(mapPostToBlog);
+  return rows.map(mapPostToBlogCard);
 }
 
 /**
@@ -194,18 +279,18 @@ export async function listPublishedPosts() {
  */
 export async function getRecentPublished(limit = 4) {
   const { rows } = await pool.query(
-    `${POST_SELECT}
+    `${POST_CARD_SELECT}
      WHERE p.status = 'PUBLISHED'
      ORDER BY COALESCE(p.published_at, p.created_at) DESC, p.id DESC
      LIMIT $1`,
     [limit],
   );
-  return rows.map(mapPostToBlog);
+  return rows.map(mapPostToBlogCard);
 }
 
 export async function getLatestPublished(limit = 4) {
   const featured = await pool.query(
-    `${POST_SELECT}
+    `${POST_CARD_SELECT}
      WHERE p.status = 'PUBLISHED' AND p.is_featured = true
      ORDER BY COALESCE(p.published_at, p.updated_at) DESC, p.id DESC
      LIMIT $1`,
@@ -213,7 +298,7 @@ export async function getLatestPublished(limit = 4) {
   );
 
   if (featured.rows.length >= limit) {
-    return featured.rows.map(mapPostToBlog);
+    return featured.rows.map(mapPostToBlogCard);
   }
 
   const excludeIds = featured.rows.map((r) => r.id);
@@ -226,7 +311,7 @@ export async function getLatestPublished(limit = 4) {
   }
 
   const fill = await pool.query(
-    `${POST_SELECT}
+    `${POST_CARD_SELECT}
      WHERE p.status = 'PUBLISHED'
        ${excludeClause}
      ORDER BY p.updated_at DESC, p.id DESC
@@ -234,19 +319,19 @@ export async function getLatestPublished(limit = 4) {
     params,
   );
 
-  return [...featured.rows, ...fill.rows].map(mapPostToBlog);
+  return [...featured.rows, ...fill.rows].map(mapPostToBlogCard);
 }
 
 /** Published articles explicitly selected for the website feature slider. */
 export async function getFeaturedPublished(limit = 6) {
   const { rows } = await pool.query(
-    `${POST_SELECT}
+    `${POST_CARD_SELECT}
      WHERE p.status = 'PUBLISHED' AND p.is_featured = true
      ORDER BY COALESCE(p.published_at, p.updated_at, p.created_at) DESC, p.id DESC
      LIMIT $1`,
     [limit],
   );
-  return rows.map(mapPostToBlog);
+  return rows.map(mapPostToBlogCard);
 }
 
 export async function getPostBySlug(slug) {
@@ -275,28 +360,32 @@ export async function getPostById(id) {
 }
 
 export async function getRelatedPublished(slug, limit = 6) {
-  const current = await getPublishedPostBySlug(slug);
-  if (!current) {
+  const catRes = await pool.query(
+    `SELECT category FROM posts WHERE slug = $1 AND status = 'PUBLISHED' LIMIT 1`,
+    [slug],
+  );
+  const category = catRes.rows[0]?.category || "";
+  if (!catRes.rows[0]) {
     return getRecentPublished(limit);
   }
 
   const { rows } = await pool.query(
-    `${POST_SELECT}
+    `${POST_CARD_SELECT}
      WHERE p.status = 'PUBLISHED' AND p.slug <> $1
      ORDER BY
        CASE WHEN p.category = $2 THEN 0 ELSE 1 END,
        COALESCE(p.published_at, p.created_at) DESC
      LIMIT $3`,
-    [slug, current.category, limit],
+    [slug, category, limit],
   );
-  return rows.map(mapPostToBlog);
+  return rows.map(mapPostToBlogCard);
 }
 
 export async function searchPublishedPosts(query, limit = 6) {
   const q = String(query || "").trim();
   if (!q) return [];
   const { rows } = await pool.query(
-    `${POST_SELECT}
+    `${POST_CARD_SELECT}
      WHERE p.status = 'PUBLISHED'
        AND (
          p.title ILIKE $1
@@ -308,7 +397,7 @@ export async function searchPublishedPosts(query, limit = 6) {
      LIMIT $2`,
     [`%${q}%`, limit],
   );
-  return rows.map(mapPostToBlog);
+  return rows.map(mapPostToBlogCard);
 }
 
 export async function createPost(payload, sessionUser) {

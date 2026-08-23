@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:check": "node scripts/check-db.js",
+    "db:migrate-content-images": "node scripts/migrate-content-images-to-r2.js",
     "deploy:production": "bash scripts/deploy-production.sh"
   },
   "dependencies": {
