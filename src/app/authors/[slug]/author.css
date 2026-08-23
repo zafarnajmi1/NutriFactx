@@ -1,0 +1,163 @@
+.author-bio-page {
+  --abio-ink: #14201b;
+  --abio-muted: #5a6b63;
+  --abio-accent: #0f6e56;
+  --abio-border: #d7e3dd;
+  color: var(--abio-ink);
+}
+
+.author-bio-page .abio-hero {
+  background: linear-gradient(180deg, #e8f3ee 0%, #f7faf8 100%);
+  border-bottom: 1px solid var(--abio-border);
+  padding: 48px 20px 40px;
+}
+
+.author-bio-page .abio-hero-inner {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.author-bio-page .abio-eyebrow {
+  margin: 0 0 12px;
+  color: var(--abio-accent);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.author-bio-page .abio-identity {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+}
+
+.author-bio-page .abio-photo {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 8px 24px rgba(15, 110, 86, 0.12);
+  flex-shrink: 0;
+}
+
+.author-bio-page .abio-photo-fallback {
+  display: grid;
+  place-items: center;
+  background: var(--abio-accent);
+  color: #fff;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.author-bio-page .abio-identity h1 {
+  margin: 0 0 6px;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.author-bio-page .abio-title {
+  margin: 0 0 4px;
+  color: var(--abio-ink);
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.author-bio-page .abio-quals {
+  margin: 0;
+  color: var(--abio-muted);
+  font-size: 0.98rem;
+}
+
+.author-bio-page .abio-layout {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 36px 20px 72px;
+}
+
+.author-bio-page .abio-section {
+  margin: 0 0 32px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--abio-border);
+}
+
+.author-bio-page .abio-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.author-bio-page .abio-section h2 {
+  margin: 0 0 12px;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.author-bio-page .abio-prose {
+  margin: 0;
+  color: #1a2420;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.author-bio-page .abio-empty {
+  margin: 0;
+  color: var(--abio-muted);
+}
+
+.author-bio-page .abio-posts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.author-bio-page .abio-posts a {
+  display: block;
+  padding: 14px 16px;
+  border: 1px solid var(--abio-border);
+  border-radius: 12px;
+  background: #fff;
+  text-decoration: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.author-bio-page .abio-posts a:hover {
+  border-color: #b7d0c5;
+  box-shadow: 0 6px 18px rgba(15, 110, 86, 0.08);
+}
+
+.author-bio-page .abio-post-title {
+  display: block;
+  color: var(--abio-ink);
+  font-weight: 600;
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+
+.author-bio-page .abio-post-meta {
+  display: block;
+  margin-top: 4px;
+  color: var(--abio-muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+  .author-bio-page .abio-identity {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .author-bio-page .abio-photo {
+    width: 96px;
+    height: 96px;
+  }
+}

@@ -289,6 +289,16 @@
   font-weight: 500;
 }
 
+.blog-detail-page .bd-author-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.blog-detail-page .bd-author-link:hover {
+  color: var(--bd-accent, #0f6e56);
+}
+
 .blog-detail-page .bd-meta-dot,
 .blog-detail-page .bd-meta-date {
   color: var(--bd-ink-faint);

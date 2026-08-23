@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import BlogComments from "../../components/blog-components/BlogComments";
 import { SidePostCard } from "../../components/blog-components/BlogDetailCards";
@@ -95,7 +96,15 @@ export default async function BlogDetailPage({ params }) {
           <span className="bd-eyebrow">{blog.category}</span>
           <h1>{blog.title}</h1>
           <div className="bd-banner-sub">
-            By {blog.author} &middot; {blog.date}
+            By{" "}
+            {blog.authorSlug ? (
+              <Link href={`/authors/${blog.authorSlug}`} className="bd-author-link">
+                {blog.author}
+              </Link>
+            ) : (
+              blog.author
+            )}{" "}
+            &middot; {blog.date}
           </div>
         </div>
       </div>
@@ -135,7 +144,13 @@ export default async function BlogDetailPage({ params }) {
               <div className="bd-article-meta">
                 <div className="bd-avatar">{getInitials(blog.author)}</div>
                 <div className="bd-author-name" itemProp="author">
-                  {blog.author}
+                  {blog.authorSlug ? (
+                    <Link href={`/authors/${blog.authorSlug}`} className="bd-author-link">
+                      {blog.author}
+                    </Link>
+                  ) : (
+                    blog.author
+                  )}
                 </div>
                 <span className="bd-meta-dot">&middot;</span>
                 <span className="bd-meta-date">{blog.date}</span>

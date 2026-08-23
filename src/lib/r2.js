@@ -178,3 +178,7 @@ export async function deleteR2TeamImage(imageUrl) {
 export async function deleteR2ContentImage(imageUrl) {
   return deleteR2ObjectByPrefix(imageUrl, "content");
 }
+
+export async function deleteR2AuthorImage(imageUrl) {
+  return deleteR2ObjectByPrefix(imageUrl, "authors");
+}

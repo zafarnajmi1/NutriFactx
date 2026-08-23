@@ -283,6 +283,7 @@ export const emptyArticleForm = {
   status: "draft",
   tags: "",
   author: "",
+  authorProfileId: "",
   featuredImage: "",
   featuredImageName: "",
   excerpt: "",
@@ -357,6 +358,7 @@ export default function ArticleComposer({
   });
   const [featuredError, setFeaturedError] = useState("");
   const [featuredUploading, setFeaturedUploading] = useState(false);
+  const [authors, setAuthors] = useState([]);
   // Once a social field is edited by hand, stop overwriting it from SEO fields.
   const [socialTouched, setSocialTouched] = useState({
     ogTitle: Boolean(initialForm?.ogTitle),
@@ -364,6 +366,36 @@ export default function ArticleComposer({
     twitterTitle: Boolean(initialForm?.twitterTitle),
     twitterDescription: Boolean(initialForm?.twitterDescription),
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/authors?public=1")
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) return;
+        if (!cancelled) {
+          setAuthors(Array.isArray(data.authors) ? data.authors : []);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isEdit) return;
+    const nextId = initialForm?.authorProfileId;
+    if (nextId === undefined) return;
+    setForm((prev) => {
+      if (String(prev.authorProfileId || "") === String(nextId || "")) return prev;
+      return {
+        ...prev,
+        authorProfileId: nextId || "",
+        author: initialForm?.author ?? prev.author,
+      };
+    });
+  }, [isEdit, initialForm?.authorProfileId, initialForm?.author]);
 
   function markSocialTouched(field) {
     setSocialTouched((prev) =>
@@ -710,12 +742,32 @@ export default function ArticleComposer({
             <div className="db-field-row">
               <label className="db-field">
                 Author
-                <input
+                <select
                   className="db-input"
-                  value={form.author}
-                  onChange={(e) => update("author", e.target.value)}
-                  placeholder="Writer name shown on the website"
-                />
+                  value={form.authorProfileId || ""}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    const selected = authors.find((item) => item.id === id);
+                    setForm((prev) => ({
+                      ...prev,
+                      authorProfileId: id,
+                      author: selected?.name || "",
+                    }));
+                  }}
+                >
+                  <option value="">Select author…</option>
+                  {authors.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                      {item.qualifications ? ` — ${item.qualifications}` : ""}
+                    </option>
+                  ))}
+                </select>
+                {!authors.length ? (
+                  <span className="db-field-hint">
+                    Add authors under Dashboard → Authors first.
+                  </span>
+                ) : null}
               </label>
               <label className="db-field">
                 Tags

@@ -172,6 +172,39 @@ async function addEnum(type, value) {
     CREATE INDEX IF NOT EXISTS site_team_members_active_idx
       ON site_team_members (is_active);
 
+    CREATE TABLE IF NOT EXISTS site_authors (
+      id BIGSERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      title TEXT,
+      qualifications TEXT,
+      credentials TEXT,
+      show_credentials BOOLEAN NOT NULL DEFAULT TRUE,
+      education TEXT,
+      experience TEXT,
+      bio TEXT,
+      image_url TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS site_authors_sort_idx
+      ON site_authors (sort_order ASC, id ASC);
+    CREATE INDEX IF NOT EXISTS site_authors_active_idx
+      ON site_authors (is_active);
+    CREATE UNIQUE INDEX IF NOT EXISTS site_authors_slug_unique
+      ON site_authors (slug);
+
+    ALTER TABLE site_authors
+      ADD COLUMN IF NOT EXISTS show_credentials BOOLEAN NOT NULL DEFAULT TRUE;
+
+    ALTER TABLE posts
+      ADD COLUMN IF NOT EXISTS author_profile_id BIGINT
+      REFERENCES site_authors(id) ON DELETE SET NULL;
+    CREATE INDEX IF NOT EXISTS posts_author_profile_id_idx
+      ON posts (author_profile_id);
+
     CREATE TABLE IF NOT EXISTS site_page_content (
       page_key TEXT PRIMARY KEY,
       hero_eyebrow TEXT,
