@@ -1,6 +1,7 @@
 import {
   deletePost,
   getPostById,
+  getPostMetaById,
   mapPostToDashboard,
   slugExists,
   updatePost,
@@ -21,13 +22,23 @@ async function cleanupFeaturedImage(imageUrl) {
   }
 }
 
-export async function GET(_request, { params }) {
+export async function GET(request, { params }) {
   const session = await getServerDashboardSession();
   const gate = requireDashboardSession(session);
   if (!gate.ok) return gate.response;
 
   try {
     const { id } = await params;
+    const fields = new URL(request.url).searchParams.get("fields");
+    if (fields === "meta") {
+      const row = await getPostMetaById(id);
+      if (!row) {
+        return Response.json({ error: "Article not found" }, { status: 404 });
+      }
+      const article = mapPostToDashboard({ ...row, content: "" });
+      return Response.json({ article });
+    }
+
     const row = await getPostById(id);
     if (!row) {
       return Response.json({ error: "Article not found" }, { status: 404 });

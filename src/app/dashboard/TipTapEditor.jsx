@@ -168,7 +168,23 @@ export default function TipTapEditor({
           getOnEdit: () => openImageEditorRef.current,
         }),
       ],
-      content: value || "",
+      // Defer huge (often base64) HTML so the editor shell mounts quickly.
+      content:
+        typeof value === "string" && value.length > 120000
+          ? "<p></p>"
+          : value || "",
+      onCreate: ({ editor: ed }) => {
+        if (typeof value === "string" && value.length > 120000) {
+          const html = value;
+          requestAnimationFrame(() => {
+            if (ed.isDestroyed) return;
+            ed.commands.setContent(html, { emitUpdate: false });
+            lastEmittedHtmlRef.current = html;
+          });
+        } else {
+          lastEmittedHtmlRef.current = value || "";
+        }
+      },
       onUpdate: ({ editor: ed }) => {
         const html = ed.getHTML();
         lastEmittedHtmlRef.current = html;

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import TipTapEditor from "./TipTapEditor";
 import { isLikelyImageFile } from "@/lib/imageUpload";
 
@@ -56,6 +56,8 @@ function slugWordCount(slug) {
 
 function stripHtml(html) {
   return String(html || "")
+    // Drop base64 payloads before tag stripping (keeps SEO checks fast).
+    .replace(/data:image\/[a-z0-9+/=;,.\s-]+/gi, " ")
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -321,6 +323,18 @@ export default function ArticleComposer({
     }
     return next;
   });
+
+  // Two-phase edit load: meta first, then content body.
+  useEffect(() => {
+    if (!isEdit) return;
+    const nextContent = initialForm?.content;
+    if (typeof nextContent !== "string") return;
+    setForm((prev) => {
+      if (prev.content === nextContent) return prev;
+      return { ...prev, content: nextContent };
+    });
+  }, [isEdit, initialForm?.content]);
+
   const [slugTouched, setSlugTouched] = useState(Boolean(initialForm?.slug));
   const [canonicalTouched, setCanonicalTouched] = useState(
     Boolean(initialForm?.canonicalUrl),
