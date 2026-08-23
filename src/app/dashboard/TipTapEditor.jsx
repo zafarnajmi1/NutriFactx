@@ -268,8 +268,15 @@ export default function TipTapEditor({
       lastEmittedHtmlRef.current = next;
       return;
     }
-    editor.commands.setContent(next, { emitUpdate: false });
-    lastEmittedHtmlRef.current = next;
+    // Defer setContent — TipTap uses flushSync; calling it during React
+    // render/commit (e.g. two-phase edit load) throws.
+    const frame = requestAnimationFrame(() => {
+      if (editor.isDestroyed) return;
+      if (next === lastEmittedHtmlRef.current) return;
+      editor.commands.setContent(next, { emitUpdate: false });
+      lastEmittedHtmlRef.current = next;
+    });
+    return () => cancelAnimationFrame(frame);
   }, [editor, value, mode]);
 
   function switchMode(next) {

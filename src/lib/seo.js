@@ -133,6 +133,9 @@ export function buildArticleJsonLd(blog) {
     author: {
       "@type": "Person",
       name: blog.author || "NutriFactx",
+      ...(blog.authorSlug
+        ? { url: absoluteUrl(`/authors/${blog.authorSlug}`, siteUrl) }
+        : {}),
     },
     publisher: {
       "@type": "Organization",

@@ -135,6 +135,17 @@ const nav = [
         ),
       },
       {
+        href: "/dashboard/authors",
+        label: "Authors",
+        match: "authors",
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        ),
+      },
+      {
         href: "/dashboard/social-media",
         label: "Social media",
         match: "social-media",
@@ -176,6 +187,7 @@ function isActive(item, active) {
   if (item.match === "seo") return active === "seo";
   if (item.match === "pages") return active === "pages";
   if (item.match === "team") return active === "team";
+  if (item.match === "authors") return active === "authors";
   if (item.match === "managers") return active === "managers";
   return false;
 }
@@ -201,7 +213,7 @@ export default function DashboardSidebar({ active = "dashboard" }) {
         if (user?.role === "manager") {
           return item.match === "articles" || item.match === "comments";
         }
-        if (item.match === "managers" || item.match === "social-media" || item.match === "seo" || item.match === "pages" || item.match === "team") {
+        if (item.match === "managers" || item.match === "social-media" || item.match === "seo" || item.match === "pages" || item.match === "team" || item.match === "authors") {
           return user?.role === "admin";
         }
         return true;

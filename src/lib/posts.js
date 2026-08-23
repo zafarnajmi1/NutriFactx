@@ -1,4 +1,5 @@
 import pool from "./db";
+import { ensureAuthorsTable } from "./authors";
 
 /** UI status → DB enum */
 const STATUS_TO_DB = {
@@ -75,6 +76,8 @@ export function mapPostToBlog(row) {
     excerpt: row.excerpt || "",
     category: row.category || "Nutrition",
     author: row.author_name || "NutriFactx",
+    authorSlug: row.author_profile_slug || "",
+    authorProfileId: row.author_profile_id ? String(row.author_profile_id) : "",
     date: formatDateShort(published),
     datetime: formatDateTime(published),
     slug: row.slug,
@@ -122,6 +125,7 @@ export function mapPostToDashboard(row) {
     cat: row.category,
     category: row.category,
     author: row.author_name || "",
+    authorProfileId: row.author_profile_id ? String(row.author_profile_id) : "",
     status: STATUS_TO_UI[row.status] || "draft",
     date: formatDateShort(row.published_at || row.updated_at || row.created_at),
     views: formatViews(row.views),
@@ -162,6 +166,7 @@ export function mapPostToDashboardList(row) {
     cat: row.category,
     category: row.category,
     author: row.author_name || "",
+    authorProfileId: row.author_profile_id ? String(row.author_profile_id) : "",
     status: STATUS_TO_UI[row.status] || "draft",
     date: formatDateShort(row.published_at || row.updated_at || row.created_at),
     views: formatViews(row.views),
@@ -180,9 +185,11 @@ const POST_SELECT = `
   SELECT
     p.*,
     u.name AS account_name,
-    u.email AS author_email
+    u.email AS author_email,
+    a.slug AS author_profile_slug
   FROM posts p
   LEFT JOIN users u ON u.id = p.author_id
+  LEFT JOIN site_authors a ON a.id = p.author_profile_id
 `;
 
 /** List columns only — excludes heavy content HTML / base64 images. */
@@ -193,6 +200,7 @@ const POST_LIST_SELECT = `
     p.slug,
     p.category,
     p.author_name,
+    p.author_profile_id,
     p.status,
     p.published_at,
     p.updated_at,
@@ -200,8 +208,10 @@ const POST_LIST_SELECT = `
     p.views,
     p.featured_image,
     p.excerpt,
-    p.is_featured
+    p.is_featured,
+    a.slug AS author_profile_slug
   FROM posts p
+  LEFT JOIN site_authors a ON a.id = p.author_profile_id
 `;
 
 /** Public card/list columns — excludes content HTML body. */
@@ -213,6 +223,7 @@ const POST_CARD_SELECT = `
     p.excerpt,
     p.category,
     p.author_name,
+    p.author_profile_id,
     p.published_at,
     p.created_at,
     p.updated_at,
@@ -231,8 +242,10 @@ const POST_CARD_SELECT = `
     p.twitter_image,
     p.no_index,
     p.robots_follow,
-    p.schema_type
+    p.schema_type,
+    a.slug AS author_profile_slug
   FROM posts p
+  LEFT JOIN site_authors a ON a.id = p.author_profile_id
 `;
 
 /** Dashboard edit shell — all fields except heavy content HTML. */
@@ -244,6 +257,7 @@ const POST_EDIT_META_SELECT = `
     p.excerpt,
     p.category,
     p.author_name,
+    p.author_profile_id,
     p.status,
     p.published_at,
     p.created_at,
@@ -265,8 +279,10 @@ const POST_EDIT_META_SELECT = `
     p.twitter_image,
     p.no_index,
     p.robots_follow,
-    p.schema_type
+    p.schema_type,
+    a.slug AS author_profile_slug
   FROM posts p
+  LEFT JOIN site_authors a ON a.id = p.author_profile_id
 `;
 
 /** Owning dashboard account for the post. The public byline is stored separately. */
@@ -287,6 +303,7 @@ async function resolveAuthorId(fallbackEmail) {
 }
 
 export async function listAllPosts({ status } = {}) {
+  await ensureAuthorsTable();
   const params = [];
   let where = "";
   if (status && STATUS_TO_DB[status]) {
@@ -301,6 +318,7 @@ export async function listAllPosts({ status } = {}) {
 }
 
 export async function listPublishedPosts() {
+  await ensureAuthorsTable();
   const { rows } = await pool.query(
     `${POST_CARD_SELECT}
      WHERE p.status = 'PUBLISHED'
@@ -314,6 +332,7 @@ export async function listPublishedPosts() {
  * Latest = featured editorial picks (is_featured), fallback to recently updated.
  */
 export async function getRecentPublished(limit = 4) {
+  await ensureAuthorsTable();
   const { rows } = await pool.query(
     `${POST_CARD_SELECT}
      WHERE p.status = 'PUBLISHED'
@@ -325,6 +344,7 @@ export async function getRecentPublished(limit = 4) {
 }
 
 export async function getLatestPublished(limit = 4) {
+  await ensureAuthorsTable();
   const featured = await pool.query(
     `${POST_CARD_SELECT}
      WHERE p.status = 'PUBLISHED' AND p.is_featured = true
@@ -360,6 +380,7 @@ export async function getLatestPublished(limit = 4) {
 
 /** Published articles explicitly selected for the website feature slider. */
 export async function getFeaturedPublished(limit = 6) {
+  await ensureAuthorsTable();
   const { rows } = await pool.query(
     `${POST_CARD_SELECT}
      WHERE p.status = 'PUBLISHED' AND p.is_featured = true
@@ -379,6 +400,7 @@ export async function getPostBySlug(slug) {
 }
 
 export async function getPublishedPostBySlug(slug) {
+  await ensureAuthorsTable();
   const { rows } = await pool.query(
     `${POST_SELECT}
      WHERE p.slug = $1 AND p.status = 'PUBLISHED'
@@ -390,6 +412,7 @@ export async function getPublishedPostBySlug(slug) {
 
 /** SEO/meta only — skips heavy content HTML for generateMetadata. */
 export async function getPublishedPostMetaBySlug(slug) {
+  await ensureAuthorsTable();
   const { rows } = await pool.query(
     `${POST_CARD_SELECT}
      WHERE p.status = 'PUBLISHED' AND p.slug = $1
@@ -400,6 +423,7 @@ export async function getPublishedPostMetaBySlug(slug) {
 }
 
 export async function getPostById(id) {
+  await ensureAuthorsTable();
   const { rows } = await pool.query(`${POST_SELECT} WHERE p.id = $1 LIMIT 1`, [
     Number(id),
   ]);
@@ -408,6 +432,7 @@ export async function getPostById(id) {
 
 /** Edit form fields without content HTML (fast first paint). */
 export async function getPostMetaById(id) {
+  await ensureAuthorsTable();
   const { rows } = await pool.query(
     `${POST_EDIT_META_SELECT} WHERE p.id = $1 LIMIT 1`,
     [Number(id)],
@@ -416,6 +441,7 @@ export async function getPostMetaById(id) {
 }
 
 export async function getRelatedPublished(slug, limit = 6) {
+  await ensureAuthorsTable();
   const catRes = await pool.query(
     `SELECT category FROM posts WHERE slug = $1 AND status = 'PUBLISHED' LIMIT 1`,
     [slug],
@@ -438,6 +464,7 @@ export async function getRelatedPublished(slug, limit = 6) {
 }
 
 export async function searchPublishedPosts(query, limit = 6) {
+  await ensureAuthorsTable();
   const q = String(query || "").trim();
   if (!q) return [];
   const { rows } = await pool.query(
@@ -456,9 +483,18 @@ export async function searchPublishedPosts(query, limit = 6) {
   return rows.map(mapPostToBlogCard);
 }
 
+function resolveAuthorProfileId(payload) {
+  const raw = payload?.authorProfileId ?? payload?.author_profile_id;
+  if (raw === null || raw === undefined || raw === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 export async function createPost(payload, sessionUser) {
+  await ensureAuthorsTable();
   const status = STATUS_TO_DB[payload.status] || "DRAFT";
   const authorId = await resolveAuthorId(sessionUser?.email);
+  const authorProfileId = resolveAuthorProfileId(payload);
   const tags = parseTags(payload.tags);
   const publishedAt =
     status === "PUBLISHED" ? payload.publishedAt || new Date() : null;
@@ -469,9 +505,10 @@ export async function createPost(payload, sessionUser) {
        category, tags, status, meta_title, meta_description, focus_keyword,
        canonical_url, og_image, og_title, og_description, no_index,
        twitter_title, twitter_description, twitter_image, robots_follow,
-       schema_type, is_featured, author_id, author_name, published_at, updated_at
+       schema_type, is_featured, author_id, author_name, author_profile_id,
+       published_at, updated_at
      ) VALUES (
-       $1,$2,$3,$4,$5,$6,$7,$8,$9::post_status,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,NOW()
+       $1,$2,$3,$4,$5,$6,$7,$8,$9::post_status,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,NOW()
      )
      RETURNING id`,
     [
@@ -500,6 +537,7 @@ export async function createPost(payload, sessionUser) {
       Boolean(payload.isFeatured),
       authorId,
       String(payload.author || "").trim() || null,
+      authorProfileId,
       publishedAt,
     ],
   );
@@ -508,6 +546,7 @@ export async function createPost(payload, sessionUser) {
 }
 
 export async function updatePost(id, payload, sessionUser) {
+  await ensureAuthorsTable();
   const existing = await getPostById(id);
   if (!existing) return null;
 
@@ -515,6 +554,7 @@ export async function updatePost(id, payload, sessionUser) {
   const authorId =
     existing.author_id ||
     (await resolveAuthorId(sessionUser?.email || existing.author_email));
+  const authorProfileId = resolveAuthorProfileId(payload);
   const tags = parseTags(payload.tags);
 
   let publishedAt = existing.published_at;
@@ -549,9 +589,10 @@ export async function updatePost(id, payload, sessionUser) {
        is_featured = $23,
        author_id = $24,
        author_name = $25,
-       published_at = $26,
+       author_profile_id = $26,
+       published_at = $27,
        updated_at = NOW()
-     WHERE id = $27`,
+     WHERE id = $28`,
     [
       payload.title,
       payload.slug,
@@ -578,6 +619,7 @@ export async function updatePost(id, payload, sessionUser) {
       Boolean(payload.isFeatured),
       authorId,
       String(payload.author || "").trim() || null,
+      authorProfileId,
       publishedAt,
       Number(id),
     ],
