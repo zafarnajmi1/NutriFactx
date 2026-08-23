@@ -21,15 +21,25 @@ export default function EditArticlePage() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch(`/api/posts/${id}`);
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error || "Article not found");
+        // Phase 1: meta fields only (fast) so the form can render.
+        const metaRes = await fetch(`/api/posts/${id}?fields=meta`);
+        const metaData = await metaRes.json().catch(() => ({}));
+        if (!metaRes.ok) throw new Error(metaData.error || "Article not found");
         if (cancelled) return;
-        setInitialForm({ ...emptyArticleForm, ...data.article });
+        setInitialForm({ ...emptyArticleForm, ...metaData.article, content: "" });
+        setLoading(false);
+
+        // Phase 2: full body for the editor (may be large).
+        const fullRes = await fetch(`/api/posts/${id}`);
+        const fullData = await fullRes.json().catch(() => ({}));
+        if (!fullRes.ok) throw new Error(fullData.error || "Article not found");
+        if (cancelled) return;
+        setInitialForm({ ...emptyArticleForm, ...fullData.article });
       } catch (err) {
-        if (!cancelled) setError(err.message || "Article not found");
-      } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setError(err.message || "Article not found");
+          setLoading(false);
+        }
       }
     }
 

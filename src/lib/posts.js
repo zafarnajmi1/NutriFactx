@@ -44,6 +44,8 @@ function formatViews(views) {
 
 function readingTimeFromHtml(html) {
   const plain = String(html || "")
+    // Ignore embedded base64 images — they inflate "word" count and burn CPU.
+    .replace(/data:image\/[a-z0-9+/=;,.\s-]+/gi, " ")
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -233,6 +235,40 @@ const POST_CARD_SELECT = `
   FROM posts p
 `;
 
+/** Dashboard edit shell — all fields except heavy content HTML. */
+const POST_EDIT_META_SELECT = `
+  SELECT
+    p.id,
+    p.title,
+    p.slug,
+    p.excerpt,
+    p.category,
+    p.author_name,
+    p.status,
+    p.published_at,
+    p.created_at,
+    p.updated_at,
+    p.views,
+    p.featured_image,
+    p.featured_image_name,
+    p.tags,
+    p.is_featured,
+    p.meta_title,
+    p.meta_description,
+    p.focus_keyword,
+    p.canonical_url,
+    p.og_title,
+    p.og_description,
+    p.og_image,
+    p.twitter_title,
+    p.twitter_description,
+    p.twitter_image,
+    p.no_index,
+    p.robots_follow,
+    p.schema_type
+  FROM posts p
+`;
+
 /** Owning dashboard account for the post. The public byline is stored separately. */
 async function resolveAuthorId(fallbackEmail) {
   if (fallbackEmail) {
@@ -352,10 +388,30 @@ export async function getPublishedPostBySlug(slug) {
   return rows[0] ? mapPostToBlog(rows[0]) : null;
 }
 
+/** SEO/meta only — skips heavy content HTML for generateMetadata. */
+export async function getPublishedPostMetaBySlug(slug) {
+  const { rows } = await pool.query(
+    `${POST_CARD_SELECT}
+     WHERE p.status = 'PUBLISHED' AND p.slug = $1
+     LIMIT 1`,
+    [slug],
+  );
+  return rows[0] ? mapPostToBlogCard(rows[0]) : null;
+}
+
 export async function getPostById(id) {
   const { rows } = await pool.query(`${POST_SELECT} WHERE p.id = $1 LIMIT 1`, [
     Number(id),
   ]);
+  return rows[0] || null;
+}
+
+/** Edit form fields without content HTML (fast first paint). */
+export async function getPostMetaById(id) {
+  const { rows } = await pool.query(
+    `${POST_EDIT_META_SELECT} WHERE p.id = $1 LIMIT 1`,
+    [Number(id)],
+  );
   return rows[0] || null;
 }
 

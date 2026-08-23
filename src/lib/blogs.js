@@ -1,8 +1,10 @@
+import { cache } from "react";
 import {
   getFeaturedPublished,
   getLatestPublished,
   getPostById,
   getPublishedPostBySlug,
+  getPublishedPostMetaBySlug,
   getRecentPublished,
   getRelatedPublished,
   listPublishedPosts,
@@ -43,9 +45,15 @@ export async function getFeaturedBlogs(limit = 6) {
   return withBlogFallback(() => getFeaturedPublished(limit));
 }
 
-export async function getBlogBySlug(slug) {
+/** One DB hit per request when metadata + page both need the article. */
+export const getBlogBySlug = cache(async (slug) => {
   return withBlogFallback(() => getPublishedPostBySlug(slug), null);
-}
+});
+
+/** Lightweight meta for <head> — no content HTML. */
+export const getBlogMetaBySlug = cache(async (slug) => {
+  return withBlogFallback(() => getPublishedPostMetaBySlug(slug), null);
+});
 
 export async function getRelatedBlogs(slug, limit = 6) {
   return withBlogFallback(() => getRelatedPublished(slug, limit));

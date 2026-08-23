@@ -5,6 +5,7 @@ import BlogsCard from "../../components/common/BlogsCard";
 import {
   getBlogBySlug,
   getBlogComments,
+  getBlogMetaBySlug,
   getRecentBlogs,
   getRelatedBlogs,
 } from "@/lib/blogs";
@@ -13,7 +14,7 @@ import "./blog-detail.css";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const blog = await getBlogBySlug(slug);
+  const blog = await getBlogMetaBySlug(slug);
   if (!blog) {
     return {
       title: "Blog not found",
@@ -40,18 +41,17 @@ export default async function BlogDetailPage({ params }) {
     notFound();
   }
 
-  const [recentPosts, relatedPosts, similarRecentPosts, comments] =
-    await Promise.all([
-      getRecentBlogs(5),
-      getRelatedBlogs(blog.slug, 5),
-      getRecentBlogs(4),
-      getBlogComments(blog.slug),
-    ]);
+  // One recent query shared by sidebar + similar grid (was fetched twice).
+  const [recentPosts, relatedPosts, comments] = await Promise.all([
+    getRecentBlogs(5),
+    getRelatedBlogs(blog.slug, 5),
+    getBlogComments(blog.slug),
+  ]);
 
   const sideRecent = recentPosts
     .filter((item) => item.slug !== blog.slug)
     .slice(0, 5);
-  const similar = similarRecentPosts
+  const similar = recentPosts
     .filter((item) => item.slug !== blog.slug)
     .slice(0, 4);
   const keywords = [
