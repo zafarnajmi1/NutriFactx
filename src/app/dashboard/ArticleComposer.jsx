@@ -15,6 +15,20 @@ function canonicalUrlForSlug(slug) {
   return cleanSlug ? `${SITE_URL}/blogs/${cleanSlug}` : "";
 }
 
+function isSiteBlogCanonical(url, slug) {
+  const clean = String(url || "")
+    .trim()
+    .replace(/\/+$/, "");
+  if (!clean || !slug) return false;
+  const expected = canonicalUrlForSlug(slug).replace(/\/+$/, "");
+  const pathOnly = `${SITE_URL}`.replace(/\/+$/, "");
+  return (
+    clean === expected ||
+    clean === `/blogs/${slug}` ||
+    clean === `${pathOnly}/blogs/${slug}`
+  );
+}
+
 export const ARTICLE_CATEGORIES = [
   "Nutrition",
   "Fitness",
@@ -319,6 +333,15 @@ export default function ArticleComposer({
   const uploadedFeaturedRef = useRef(new Set());
   const [form, setForm] = useState(() => {
     const next = { ...emptyArticleForm, ...initialForm };
+    // Heal stale canonical left behind after a slug rename.
+    if (
+      next.slug &&
+      next.canonicalUrl &&
+      !isSiteBlogCanonical(next.canonicalUrl, next.slug) &&
+      /\/blogs\/[^/]+\/?$/.test(String(next.canonicalUrl).trim())
+    ) {
+      next.canonicalUrl = canonicalUrlForSlug(next.slug);
+    }
     if (!next.canonicalUrl && next.slug) {
       next.canonicalUrl = canonicalUrlForSlug(next.slug);
     }
@@ -337,9 +360,16 @@ export default function ArticleComposer({
   }, [isEdit, initialForm?.content]);
 
   const [slugTouched, setSlugTouched] = useState(Boolean(initialForm?.slug));
-  const [canonicalTouched, setCanonicalTouched] = useState(
-    Boolean(initialForm?.canonicalUrl),
-  );
+  // Only treat canonical as manually owned when it is not the auto /blogs/{slug} URL.
+  const [canonicalTouched, setCanonicalTouched] = useState(() => {
+    const url = initialForm?.canonicalUrl;
+    const slug = initialForm?.slug;
+    if (!url) return false;
+    if (isSiteBlogCanonical(url, slug)) return false;
+    // Stale same-site /blogs/{old-slug} should stay auto-synced, not "manual".
+    if (/\/blogs\/[^/]+\/?$/.test(String(url).trim())) return false;
+    return true;
+  });
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");

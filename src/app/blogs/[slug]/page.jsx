@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import BlogComments from "../../components/blog-components/BlogComments";
 import { SidePostCard } from "../../components/blog-components/BlogDetailCards";
 import BlogsCard from "../../components/common/BlogsCard";
@@ -7,6 +7,7 @@ import {
   getBlogBySlug,
   getBlogComments,
   getBlogMetaBySlug,
+  getBlogSlugByFormerCanonical,
   getRecentBlogs,
   getRelatedBlogs,
 } from "@/lib/blogs";
@@ -15,7 +16,13 @@ import "./blog-detail.css";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const blog = await getBlogMetaBySlug(slug);
+  let blog = await getBlogMetaBySlug(slug);
+  if (!blog) {
+    const liveSlug = await getBlogSlugByFormerCanonical(slug);
+    if (liveSlug) {
+      blog = await getBlogMetaBySlug(liveSlug);
+    }
+  }
   if (!blog) {
     return {
       title: "Blog not found",
@@ -39,6 +46,10 @@ export default async function BlogDetailPage({ params }) {
   const blog = await getBlogBySlug(slug);
 
   if (!blog) {
+    const liveSlug = await getBlogSlugByFormerCanonical(slug);
+    if (liveSlug) {
+      permanentRedirect(`/blogs/${liveSlug}`);
+    }
     notFound();
   }
 

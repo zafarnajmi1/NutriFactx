@@ -31,6 +31,17 @@ const nextConfig = {
     "@tiptap/extension-table-header",
     "@tiptap/extensions",
   ],
+  // Old slug after rename — real HTTP 308 so Facebook/LinkedIn bots follow it.
+  async redirects() {
+    return [
+      {
+        source:
+          "/blogs/how-to-avoid-seed-oils-when-eating-out-a-practical-guide",
+        destination: "/blogs/how-to-avoid-seed-oils-at-restaurants",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
