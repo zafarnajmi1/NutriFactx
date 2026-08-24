@@ -81,7 +81,7 @@ export default function Footer() {
               </Link>
             ))}
           </nav>
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-4">
             {visibleSocialLinks.map((item) => (
               <a
                 key={item.label}
@@ -89,12 +89,12 @@ export default function Footer() {
                 aria-label={item.label}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-nf-secondary transition-colors hover:text-nf-green"
+                className="inline-flex size-9 items-center justify-center text-nf-secondary transition-colors hover:text-nf-green"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
+                  width="22"
+                  height="22"
                   viewBox="0 0 24 24"
                   fill="currentColor"
                   aria-hidden="true"
