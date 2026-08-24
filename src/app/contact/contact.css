@@ -117,14 +117,14 @@
 
 .contact-page .ct-left-social {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   margin-top: 32px;
 }
 
 .contact-page .ct-left-social a {
   display: flex;
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   align-items: center;
   justify-content: center;
   border: 1px solid rgba(255, 255, 255, 0.3);

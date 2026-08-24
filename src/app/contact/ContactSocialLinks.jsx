@@ -95,8 +95,8 @@ export default function ContactSocialLinks() {
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            width="15"
-            height="15"
+            width="20"
+            height="20"
             aria-hidden="true"
           >
             {platform.icon}
