@@ -5,6 +5,7 @@ import {
   getPostById,
   getPublishedPostBySlug,
   getPublishedPostMetaBySlug,
+  getPublishedSlugByFormerCanonical,
   getRecentPublished,
   getRelatedPublished,
   listPublishedPosts,
@@ -54,6 +55,11 @@ export const getBlogBySlug = cache(async (slug) => {
 export const getBlogMetaBySlug = cache(async (slug) => {
   return withBlogFallback(() => getPublishedPostMetaBySlug(slug), null);
 });
+
+/** Live slug when an old /blogs/{slug} only exists as a stale canonical_url. */
+export async function getBlogSlugByFormerCanonical(slug) {
+  return withBlogFallback(() => getPublishedSlugByFormerCanonical(slug), null);
+}
 
 export async function getRelatedBlogs(slug, limit = 6) {
   return withBlogFallback(() => getRelatedPublished(slug, limit));

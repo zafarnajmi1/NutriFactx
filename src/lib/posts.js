@@ -1,5 +1,6 @@
 import pool from "./db";
 import { ensureAuthorsTable } from "./authors";
+import { getSiteUrl, resolveArticleUrl } from "@/lib/seo";
 
 /** UI status → DB enum */
 const STATUS_TO_DB = {
@@ -410,6 +411,40 @@ export async function getPublishedPostBySlug(slug) {
   return rows[0] ? mapPostToBlog(rows[0]) : null;
 }
 
+/**
+ * After a slug rename, old links may still match the stale canonical_url.
+ * Returns the live slug so callers can 308-redirect.
+ */
+export async function getPublishedSlugByFormerCanonical(pathSlug) {
+  const clean = String(pathSlug || "")
+    .trim()
+    .replace(/^\/+|\/+$/g, "");
+  if (!clean) return null;
+
+  const siteUrl = getSiteUrl().replace(/\/+$/, "");
+  await ensureAuthorsTable();
+  const { rows } = await pool.query(
+    `SELECT slug
+     FROM posts
+     WHERE status = 'PUBLISHED'
+       AND slug <> $1
+       AND canonical_url IS NOT NULL
+       AND (
+         rtrim(canonical_url, '/') = $2
+         OR rtrim(canonical_url, '/') = $3
+         OR rtrim(canonical_url, '/') = $4
+       )
+     LIMIT 1`,
+    [
+      clean,
+      `/blogs/${clean}`,
+      `${siteUrl}/blogs/${clean}`,
+      `https://nutrifactx.com/blogs/${clean}`,
+    ],
+  );
+  return rows[0]?.slug || null;
+}
+
 /** SEO/meta only — skips heavy content HTML for generateMetadata. */
 export async function getPublishedPostMetaBySlug(slug) {
   await ensureAuthorsTable();
@@ -490,6 +525,14 @@ function resolveAuthorProfileId(payload) {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
+/** Keep stored canonical in sync with the live /blogs/{slug} when it was a same-site blog URL. */
+function normalizeCanonicalUrl(slug, canonicalUrl) {
+  return resolveArticleUrl({
+    slug,
+    canonicalUrl: String(canonicalUrl || "").trim() || undefined,
+  });
+}
+
 export async function createPost(payload, sessionUser) {
   await ensureAuthorsTable();
   const status = STATUS_TO_DB[payload.status] || "DRAFT";
@@ -498,6 +541,10 @@ export async function createPost(payload, sessionUser) {
   const tags = parseTags(payload.tags);
   const publishedAt =
     status === "PUBLISHED" ? payload.publishedAt || new Date() : null;
+  const canonicalUrl = normalizeCanonicalUrl(
+    payload.slug,
+    payload.canonicalUrl,
+  );
 
   const { rows } = await pool.query(
     `INSERT INTO posts (
@@ -524,7 +571,7 @@ export async function createPost(payload, sessionUser) {
       payload.metaTitle || null,
       payload.metaDescription || null,
       payload.focusKeyword || null,
-      payload.canonicalUrl || null,
+      canonicalUrl || null,
       payload.ogImage || null,
       payload.ogTitle || null,
       payload.ogDescription || null,
@@ -561,6 +608,11 @@ export async function updatePost(id, payload, sessionUser) {
   if (status === "PUBLISHED") {
     publishedAt = existing.published_at || new Date();
   }
+
+  const canonicalUrl = normalizeCanonicalUrl(
+    payload.slug,
+    payload.canonicalUrl,
+  );
 
   await pool.query(
     `UPDATE posts SET
@@ -606,7 +658,7 @@ export async function updatePost(id, payload, sessionUser) {
       payload.metaTitle || null,
       payload.metaDescription || null,
       payload.focusKeyword || null,
-      payload.canonicalUrl || null,
+      canonicalUrl || null,
       payload.ogImage || null,
       payload.ogTitle || null,
       payload.ogDescription || null,

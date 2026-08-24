@@ -16,6 +16,34 @@ export function absoluteUrl(pathOrUrl, siteUrl = getSiteUrl()) {
 }
 
 /**
+ * Public article URL for canonical / Open Graph / JSON-LD.
+ * If canonical points at a different /blogs/{slug} on this site (common after a
+ * slug rename), prefer the live post slug so social crawlers don't follow a 404.
+ */
+export function resolveArticleUrl(blog, siteUrl = getSiteUrl()) {
+  const slug = String(blog?.slug || "").trim();
+  const fallback = slug ? `/blogs/${slug}` : "/";
+  const raw = String(blog?.canonicalUrl || "").trim();
+  if (!raw) return absoluteUrl(fallback, siteUrl);
+
+  const absolute = absoluteUrl(raw, siteUrl);
+  try {
+    const parsed = new URL(absolute);
+    const siteHost = new URL(siteUrl).host;
+    if (parsed.host === siteHost) {
+      const match = parsed.pathname.match(/^\/blogs\/([^/]+)\/?$/);
+      if (match && slug && match[1] !== slug) {
+        return absoluteUrl(fallback, siteUrl);
+      }
+    }
+  } catch {
+    return absoluteUrl(fallback, siteUrl);
+  }
+
+  return absolute;
+}
+
+/**
  * Build Next.js Metadata from a published blog (dashboard SEO fields).
  */
 export function buildArticleMetadata(blog) {
@@ -29,10 +57,7 @@ export function buildArticleMetadata(blog) {
     blog.metaDescription ||
     blog.excerpt ||
     "Science-backed nutrition facts and wellness insights from NutriFactx.";
-  const canonical = absoluteUrl(
-    blog.canonicalUrl || `/blogs/${blog.slug}`,
-    siteUrl,
-  );
+  const canonical = resolveArticleUrl(blog, siteUrl);
   const ogTitle = blog.ogTitle || title;
   const ogDescription = blog.ogDescription || description;
   const ogImageRaw = blog.ogImage || blog.featuredImage || "";
@@ -114,7 +139,7 @@ export function buildArticleJsonLd(blog) {
   if (!blog) return null;
   const siteUrl = getSiteUrl();
   const schemaType = blog.schemaType || "Article";
-  const url = absoluteUrl(blog.canonicalUrl || `/blogs/${blog.slug}`, siteUrl);
+  const url = resolveArticleUrl(blog, siteUrl);
   const imageRaw = blog.ogImage || blog.featuredImage || "";
   const image =
     /^https?:\/\//i.test(imageRaw) || imageRaw.startsWith("/")
@@ -161,10 +186,7 @@ export function buildArticleJsonLd(blog) {
 export function buildArticleBreadcrumbJsonLd(blog) {
   if (!blog) return null;
   const siteUrl = getSiteUrl();
-  const articleUrl = absoluteUrl(
-    blog.canonicalUrl || `/blogs/${blog.slug}`,
-    siteUrl,
-  );
+  const articleUrl = resolveArticleUrl(blog, siteUrl);
 
   return {
     "@context": "https://schema.org",
