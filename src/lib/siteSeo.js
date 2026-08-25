@@ -1,5 +1,5 @@
 import pool, { shouldUseLocalDbFallback } from "./db";
-import { absoluteUrl, getSiteUrl } from "./seo";
+import { absoluteUrl, getSiteUrl, sanitizeMetaText } from "./seo";
 
 export const SITE_SEO_PAGES = [
   {
@@ -46,15 +46,17 @@ const PAGE_KEYS = SITE_SEO_PAGES.map((page) => page.key);
 
 const DEFAULTS = {
   home: {
-    metaTitle: "Science-backed nutrition facts and wellness insights",
+    metaTitle:
+      "NutriFactx | Science-Backed Nutrition Facts & Practical Wellness Guides",
     metaDescription:
-      "NutriFactx shares clear, science-backed nutrition facts, wellness guides, and practical health insights you can trust.",
-    focusKeyword: "nutrition facts",
-    keywords: "nutrition, wellness, health, vitamins, diet, NutriFactx",
+      "Clear, science-backed nutrition facts and practical wellness guides from NutriFactx—vitamins, diet tips, and everyday health explained simply.",
+    focusKeyword: "science-backed nutrition facts",
+    keywords:
+      "science-backed nutrition facts, NutriFactx, wellness guides, vitamins, healthy eating",
     canonicalUrl: "/",
-    ogTitle: "NutriFactx, Nutrition facts and wellness insights",
+    ogTitle: "NutriFactx | Science-Backed Nutrition Facts",
     ogDescription:
-      "Clear, science-backed nutrition facts, wellness guides, and practical health insights.",
+      "Science-backed nutrition facts and practical wellness guides you can use every day.",
     ogImage: DEFAULT_SHARE_IMAGE,
     twitterTitle: "",
     twitterDescription: "",
@@ -64,15 +66,16 @@ const DEFAULTS = {
     schemaType: "WebSite",
   },
   blogs: {
-    metaTitle: "Blogs",
+    metaTitle: "Nutrition & Wellness Articles | NutriFactx",
     metaDescription:
-      "Browse all NutriFactx nutrition and wellness articles, vitamins, diet, fitness, sleep, and more.",
-    focusKeyword: "nutrition blogs",
-    keywords: "nutrition blogs, wellness articles, vitamins, diet, fitness",
+      "Browse NutriFactx nutrition and wellness articles—practical guides on diet, kids’ health, seed oils, vitamins, and everyday healthy habits.",
+    focusKeyword: "nutrition and wellness articles",
+    keywords:
+      "nutrition and wellness articles, NutriFactx blog, diet tips, healthy eating guides",
     canonicalUrl: "/blogs",
-    ogTitle: "NutriFactx Blogs",
+    ogTitle: "Nutrition & Wellness Articles | NutriFactx",
     ogDescription:
-      "Browse all NutriFactx nutrition and wellness articles, vitamins, diet, fitness, sleep, and more.",
+      "Practical nutrition and wellness articles from NutriFactx—clear guides for everyday health decisions.",
     ogImage: DEFAULT_SHARE_IMAGE,
     twitterTitle: "",
     twitterDescription: "",
@@ -82,15 +85,16 @@ const DEFAULTS = {
     schemaType: "CollectionPage",
   },
   "about-us": {
-    metaTitle: "About Us",
+    metaTitle: "About NutriFactx | Science-Backed Nutrition Team",
     metaDescription:
-      "Learn about NutriFactx, science-backed nutrition facts and wellness insights for everyday health.",
+      "Learn about NutriFactx’s mission to make science-backed nutrition facts clear, accurate, and useful for everyday health decisions.",
     focusKeyword: "about NutriFactx",
-    keywords: "about NutriFactx, nutrition team, science-backed health",
+    keywords:
+      "about NutriFactx, nutrition team, science-backed health, NutriFactx mission",
     canonicalUrl: "/about-us",
-    ogTitle: "About NutriFactx",
+    ogTitle: "About NutriFactx | Science-Backed Nutrition Team",
     ogDescription:
-      "Learn about NutriFactx, science-backed nutrition facts and wellness insights for everyday health.",
+      "Meet NutriFactx—science-backed nutrition facts and wellness insights made clear and practical.",
     ogImage: DEFAULT_SHARE_IMAGE,
     twitterTitle: "",
     twitterDescription: "",
@@ -100,15 +104,16 @@ const DEFAULTS = {
     schemaType: "AboutPage",
   },
   contact: {
-    metaTitle: "Contact Us",
+    metaTitle: "Contact NutriFactx | Questions & Partnerships",
     metaDescription:
-      "Get in touch with the NutriFactx team for questions, feedback, or partnerships.",
+      "Have a nutrition question, story idea, or partnership inquiry? Contact the NutriFactx team—we’d love to hear from you.",
     focusKeyword: "contact NutriFactx",
-    keywords: "contact NutriFactx, nutrition questions, partnerships",
+    keywords:
+      "contact NutriFactx, nutrition questions, partnerships, NutriFactx support",
     canonicalUrl: "/contact",
     ogTitle: "Contact NutriFactx",
     ogDescription:
-      "Get in touch with the NutriFactx team for questions, feedback, or partnerships.",
+      "Reach the NutriFactx team with questions, feedback, corrections, or partnership ideas.",
     ogImage: DEFAULT_SHARE_IMAGE,
     twitterTitle: "",
     twitterDescription: "",
@@ -118,7 +123,7 @@ const DEFAULTS = {
     schemaType: "ContactPage",
   },
   "privacy-policy": {
-    metaTitle: "Privacy Policy",
+    metaTitle: "Privacy Policy | NutriFactx",
     metaDescription:
       "How NutriFactx collects, uses, and protects your personal information.",
     focusKeyword: "NutriFactx privacy policy",
@@ -136,7 +141,7 @@ const DEFAULTS = {
     schemaType: "WebPage",
   },
   terms: {
-    metaTitle: "Terms of Use",
+    metaTitle: "Terms of Use | NutriFactx",
     metaDescription:
       "Terms of use for NutriFactx, including content guidelines, acceptable use, and site policies.",
     focusKeyword: "NutriFactx terms of use",
@@ -413,22 +418,25 @@ export async function buildPageMetadata(pageKey) {
   const seo = (await getSiteSeo(pageKey)) || mapRow(null, pageKey);
   const page = SITE_SEO_PAGES.find((item) => item.key === pageKey);
   const siteUrl = getSiteUrl();
-  const title = seo.metaTitle || page?.label || "NutriFactx";
-  const description =
+  const title = sanitizeMetaText(seo.metaTitle || page?.label || "NutriFactx");
+  const description = sanitizeMetaText(
     seo.metaDescription ||
-    "Science-backed nutrition facts and wellness insights from NutriFactx.";
+      "Science-backed nutrition facts and wellness insights from NutriFactx.",
+  );
   const canonical = absoluteUrl(
     seo.canonicalUrl || page?.path || "/",
     siteUrl,
   );
-  const ogTitle = seo.ogTitle || title;
-  const ogDescription = seo.ogDescription || description;
+  const ogTitle = sanitizeMetaText(seo.ogTitle || title);
+  const ogDescription = sanitizeMetaText(seo.ogDescription || description);
   const ogImage = resolvePublicImage(
     seo.ogImage || DEFAULT_SHARE_IMAGE,
     siteUrl,
   );
-  const twitterTitle = seo.twitterTitle || ogTitle;
-  const twitterDescription = seo.twitterDescription || ogDescription;
+  const twitterTitle = sanitizeMetaText(seo.twitterTitle || ogTitle);
+  const twitterDescription = sanitizeMetaText(
+    seo.twitterDescription || ogDescription,
+  );
   const twitterImage =
     resolvePublicImage(seo.twitterImage, siteUrl) || ogImage;
   const keywords = [
@@ -488,8 +496,8 @@ export async function buildPageJsonLd(pageKey) {
   return {
     "@context": "https://schema.org",
     "@type": seo.schemaType || "WebPage",
-    name: seo.metaTitle || page?.label || "NutriFactx",
-    description: seo.metaDescription || undefined,
+    name: sanitizeMetaText(seo.metaTitle || page?.label || "NutriFactx"),
+    description: sanitizeMetaText(seo.metaDescription) || undefined,
     url,
     image: image || undefined,
     keywords: [seo.focusKeyword, ...parseKeywords(seo.keywords)]

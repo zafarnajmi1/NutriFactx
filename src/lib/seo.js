@@ -15,6 +15,13 @@ export function absoluteUrl(pathOrUrl, siteUrl = getSiteUrl()) {
   return `${siteUrl}/${value}`;
 }
 
+/** Collapse whitespace/newlines so social crawlers get valid single-line meta tags. */
+export function sanitizeMetaText(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /**
  * Public article URL for canonical / Open Graph / JSON-LD.
  * If canonical points at a different /blogs/{slug} on this site (common after a
@@ -52,14 +59,15 @@ export function buildArticleMetadata(blog) {
   }
 
   const siteUrl = getSiteUrl();
-  const title = blog.metaTitle || blog.title;
-  const description =
+  const title = sanitizeMetaText(blog.metaTitle || blog.title);
+  const description = sanitizeMetaText(
     blog.metaDescription ||
-    blog.excerpt ||
-    "Science-backed nutrition facts and wellness insights from NutriFactx.";
+      blog.excerpt ||
+      "Science-backed nutrition facts and wellness insights from NutriFactx.",
+  );
   const canonical = resolveArticleUrl(blog, siteUrl);
-  const ogTitle = blog.ogTitle || title;
-  const ogDescription = blog.ogDescription || description;
+  const ogTitle = sanitizeMetaText(blog.ogTitle || title);
+  const ogDescription = sanitizeMetaText(blog.ogDescription || description);
   const ogImageRaw = blog.ogImage || blog.featuredImage || "";
   // Social crawlers need a public http(s) URL — skip base64 data images
   const ogImage =
@@ -82,8 +90,10 @@ export function buildArticleMetadata(blog) {
         },
       ]
     : undefined;
-  const twitterTitle = blog.twitterTitle || ogTitle;
-  const twitterDescription = blog.twitterDescription || ogDescription;
+  const twitterTitle = sanitizeMetaText(blog.twitterTitle || ogTitle);
+  const twitterDescription = sanitizeMetaText(
+    blog.twitterDescription || ogDescription,
+  );
   const twitterImageRaw =
     blog.twitterImage || blog.ogImage || blog.featuredImage || "";
   const twitterImage =
@@ -150,8 +160,9 @@ export function buildArticleJsonLd(blog) {
   return {
     "@context": "https://schema.org",
     "@type": schemaType === "NewsArticle" ? "NewsArticle" : "Article",
-    headline: blog.metaTitle || blog.title,
-    description: blog.metaDescription || blog.excerpt || undefined,
+    headline: sanitizeMetaText(blog.metaTitle || blog.title),
+    description:
+      sanitizeMetaText(blog.metaDescription || blog.excerpt) || undefined,
     image: image ? [image] : undefined,
     datePublished: blog.publishedAt || undefined,
     dateModified: blog.updatedAt || blog.publishedAt || undefined,
