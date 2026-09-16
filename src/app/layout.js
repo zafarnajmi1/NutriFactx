@@ -1,9 +1,12 @@
 import { DM_Sans, Fraunces } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import Header from "./components/common/Header";
 import Footer from "./components/common/Footer";
 import AnalyticsTracker from "./components/common/AnalyticsTracker";
 import { getSiteUrl } from "@/lib/seo";
+
+const GA_MEASUREMENT_ID = "G-0LC72BLB5F";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -95,6 +98,18 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${dmSans.variable} ${fraunces.variable}`}>
       <body className="min-h-screen flex flex-col bg-nf-surface text-nf-text antialiased">
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
+          `}
+        </Script>
         <AnalyticsTracker />
         <Header />
         <main className="flex-1 pb-28 pt-[var(--nf-header-height)] sm:pb-24">{children}</main>
