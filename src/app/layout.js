@@ -97,12 +97,13 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${dmSans.variable} ${fraunces.variable}`}>
-      <body className="min-h-screen flex flex-col bg-nf-surface text-nf-text antialiased">
+      <head>
+        {/* Google tag (gtag.js) — beforeInteractive keeps real script tags in initial HTML */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-          strategy="afterInteractive"
+          strategy="beforeInteractive"
         />
-        <Script id="google-analytics" strategy="afterInteractive">
+        <Script id="google-analytics" strategy="beforeInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
@@ -110,6 +111,8 @@ export default function RootLayout({ children }) {
             gtag('config', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
+      </head>
+      <body className="min-h-screen flex flex-col bg-nf-surface text-nf-text antialiased">
         <AnalyticsTracker />
         <Header />
         <main className="flex-1 pb-28 pt-[var(--nf-header-height)] sm:pb-24">{children}</main>
