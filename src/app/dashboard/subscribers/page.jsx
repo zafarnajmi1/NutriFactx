@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import DashboardSidebar from "../DashboardSidebar";
+import DashboardPager, { paginateItems } from "../DashboardPager";
 import "../dashboard.css";
 
 const statusLabel = {
@@ -33,6 +34,7 @@ export default function DashboardSubscribersPage() {
   const [editForm, setEditForm] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,6 +89,12 @@ export default function DashboardSubscribersPage() {
       );
     });
   }, [subscribers, filter, plan, query]);
+
+  const paged = useMemo(() => paginateItems(visible, page), [visible, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter, plan, query]);
 
   function openEdit(item) {
     setLoadError("");
@@ -237,7 +245,7 @@ export default function DashboardSubscribersPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {visible.map((item) => (
+                    {paged.items.map((item) => (
                       <tr key={item.id}>
                         <td>
                           <div className="db-people-cell">
@@ -285,8 +293,14 @@ export default function DashboardSubscribersPage() {
 
             <div className="db-articles-footer">
               <span>
-                Showing {visible.length} of {counts.all} subscribers
+                Showing {paged.total ? `${paged.start + 1}–${paged.end}` : "0"} of {paged.total} subscribers
               </span>
+              <DashboardPager
+                page={paged.currentPage}
+                totalPages={paged.totalPages}
+                onPageChange={setPage}
+                disabled={loading}
+              />
             </div>
           </div>
         </main>

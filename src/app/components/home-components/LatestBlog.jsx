@@ -1,15 +1,15 @@
 import BlogsCard from "../common/BlogsCard";
-import { getLatestBlogs } from "@/lib/blogs";
+import { getMostViewedBlogs } from "@/lib/blogs";
 
 export default async function LatestBlogs() {
-  const latestPosts = await getLatestBlogs(4);
+  const latestPosts = await getMostViewedBlogs(15);
 
   if (!latestPosts.length) return null;
 
   return (
     <section className="nf-animate-fade-up nf-delay-2">
       <h2 className="nf-section-title mb-3.5">
-        Latest posts
+        Most viewed
       </h2>
       <div className="nf-posts-grid">
         {latestPosts.map((post) => (

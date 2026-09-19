@@ -2,6 +2,7 @@ import { cache } from "react";
 import {
   getFeaturedPublished,
   getLatestPublished,
+  getMostViewedPublished,
   getPostById,
   getPublishedPostBySlug,
   getPublishedPostMetaBySlug,
@@ -38,8 +39,12 @@ export async function getRecentBlogs(limit = 4) {
   return withBlogFallback(() => getRecentPublished(limit));
 }
 
-export async function getLatestBlogs(limit = 4) {
-  return withBlogFallback(() => getLatestPublished(limit));
+export async function getLatestBlogs(limit = 4, excludeSlug = "") {
+  return withBlogFallback(() => getLatestPublished(limit, excludeSlug));
+}
+
+export async function getMostViewedBlogs(limit = 10, excludeSlug = "") {
+  return withBlogFallback(() => getMostViewedPublished(limit, excludeSlug));
 }
 
 export async function getFeaturedBlogs(limit = 6) {

@@ -1320,6 +1320,11 @@
   height: 32px;
 }
 
+.dashboard-isolate .db-pager-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .dashboard-isolate .db-featured-label {
   display: block;
   margin-bottom: 5px;

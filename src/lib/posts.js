@@ -330,7 +330,7 @@ export async function listPublishedPosts() {
 
 /**
  * Recent = newly published (by published_at).
- * Latest = featured editorial picks (is_featured), fallback to recently updated.
+ * Most viewed = published posts with real view counts, highest first.
  */
 export async function getRecentPublished(limit = 4) {
   await ensureAuthorsTable();
@@ -344,39 +344,49 @@ export async function getRecentPublished(limit = 4) {
   return rows.map(mapPostToBlogCard);
 }
 
-export async function getLatestPublished(limit = 4) {
+export async function getMostViewedPublished(limit = 10, excludeSlug = "") {
   await ensureAuthorsTable();
-  const featured = await pool.query(
-    `${POST_CARD_SELECT}
-     WHERE p.status = 'PUBLISHED' AND p.is_featured = true
-     ORDER BY COALESCE(p.published_at, p.updated_at) DESC, p.id DESC
-     LIMIT $1`,
-    [limit],
-  );
-
-  if (featured.rows.length >= limit) {
-    return featured.rows.map(mapPostToBlogCard);
-  }
-
-  const excludeIds = featured.rows.map((r) => r.id);
-  const remaining = limit - featured.rows.length;
-  const params = [remaining];
+  const params = [limit];
+  const slug = String(excludeSlug || "").trim();
   let excludeClause = "";
-  if (excludeIds.length) {
-    params.push(excludeIds);
-    excludeClause = `AND NOT (p.id = ANY($2::int[]))`;
+  if (slug) {
+    params.push(slug);
+    excludeClause = `AND p.slug <> $${params.length}`;
   }
 
-  const fill = await pool.query(
-    `${POST_CARD_SELECT}
+  const viewRank = `GREATEST(COALESCE(p.views, 0), COALESCE(pv.pv_count, 0))`;
+  const sql = `${POST_CARD_SELECT}
+     LEFT JOIN (
+       SELECT post_id, COUNT(*)::int AS pv_count
+       FROM analytics_pageviews
+       WHERE post_id IS NOT NULL
+       GROUP BY post_id
+     ) pv ON pv.post_id = p.id
      WHERE p.status = 'PUBLISHED'
+       AND ${viewRank} > 0
        ${excludeClause}
-     ORDER BY p.updated_at DESC, p.id DESC
-     LIMIT $1`,
-    params,
-  );
+     ORDER BY ${viewRank} DESC, COALESCE(p.published_at, p.created_at) DESC, p.id DESC
+     LIMIT $1`;
 
-  return [...featured.rows, ...fill.rows].map(mapPostToBlogCard);
+  try {
+    const { rows } = await pool.query(sql, params);
+    return rows.map(mapPostToBlogCard);
+  } catch {
+    const { rows } = await pool.query(
+      `${POST_CARD_SELECT}
+       WHERE p.status = 'PUBLISHED'
+         AND COALESCE(p.views, 0) > 0
+         ${excludeClause}
+       ORDER BY COALESCE(p.views, 0) DESC, COALESCE(p.published_at, p.created_at) DESC, p.id DESC
+       LIMIT $1`,
+      params,
+    );
+    return rows.map(mapPostToBlogCard);
+  }
+}
+
+export async function getLatestPublished(limit = 4, excludeSlug = "") {
+  return getMostViewedPublished(limit, excludeSlug);
 }
 
 /** Published articles explicitly selected for the website feature slider. */

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import DashboardSidebar from "../DashboardSidebar";
+import DashboardPager, { paginateItems } from "../DashboardPager";
 import { getDashboardSession } from "../../../lib/dashboardAuth";
 import "../dashboard.css";
 
@@ -31,6 +32,7 @@ export default function DashboardCommentsPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [page, setPage] = useState(1);
 
   const loadComments = useCallback(async () => {
     setLoading(true);
@@ -79,6 +81,12 @@ export default function DashboardCommentsPage() {
       );
     });
   }, [comments, filter, query]);
+
+  const paged = useMemo(() => paginateItems(visible, page), [visible, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter, query]);
 
   function openEdit(item) {
     if (!canEditComment) return;
@@ -218,7 +226,7 @@ export default function DashboardCommentsPage() {
               <p className="db-comments-empty">No comments match this filter.</p>
             ) : (
               <ul className="db-comments-manage-list">
-                {visible.map((item) => (
+                {paged.items.map((item) => (
                   <li key={item.id} className="db-comments-manage-item">
                     <div className="db-comments-manage-avatar" aria-hidden="true">
                       {item.initials}
@@ -277,8 +285,14 @@ export default function DashboardCommentsPage() {
 
             <div className="db-articles-footer">
               <span>
-                Showing {visible.length} of {counts.all} comments
+                Showing {paged.total ? `${paged.start + 1}–${paged.end}` : "0"} of {paged.total} comments
               </span>
+              <DashboardPager
+                page={paged.currentPage}
+                totalPages={paged.totalPages}
+                onPageChange={setPage}
+                disabled={loading}
+              />
             </div>
           </div>
         </main>
