@@ -8,6 +8,7 @@ import {
   getBlogComments,
   getBlogMetaBySlug,
   getBlogSlugByFormerCanonical,
+  getMostViewedBlogs,
   getRecentBlogs,
   getRelatedBlogs,
 } from "@/lib/blogs";
@@ -53,19 +54,20 @@ export default async function BlogDetailPage({ params }) {
     notFound();
   }
 
-  // One recent query shared by sidebar + similar grid (was fetched twice).
-  const [recentPosts, relatedPosts, comments] = await Promise.all([
-    getRecentBlogs(5),
-    getRelatedBlogs(blog.slug, 5),
+  const [recentPosts, relatedPosts, mostViewedPosts, comments] = await Promise.all([
+    getRecentBlogs(7),
+    getRelatedBlogs(blog.slug, 10),
+    getMostViewedBlogs(10, blog.slug),
     getBlogComments(blog.slug),
   ]);
 
   const sideRecent = recentPosts
     .filter((item) => item.slug !== blog.slug)
-    .slice(0, 5);
+    .slice(0, 6);
   const similar = recentPosts
     .filter((item) => item.slug !== blog.slug)
     .slice(0, 4);
+  const mostViewed = mostViewedPosts.slice(0, 10);
   const keywords = [
     blog.focusKeyword,
     ...(Array.isArray(blog.tags) ? blog.tags : []),
@@ -122,7 +124,7 @@ export default async function BlogDetailPage({ params }) {
 
       <div className="bd-layout">
         <aside className="bd-aside">
-          <p className="bd-panel-title">Recent blogs</p>
+          <p className="bd-panel-title">Recent Posts</p>
           {sideRecent.map((post) => (
             <SidePostCard
               key={post.id}
@@ -188,10 +190,24 @@ export default async function BlogDetailPage({ params }) {
         </div>
 
         <aside className="bd-aside">
-          <p className="bd-panel-title">Related blogs</p>
+          <p className="bd-panel-title">Related Posts</p>
           {relatedPosts.map((post) => (
             <SidePostCard
               key={post.id}
+              title={post.title}
+              excerpt={post.excerpt}
+              category={post.category}
+              author={post.author}
+              date={post.date}
+              href={`/blogs/${post.slug}`}
+              seed={post.slug}
+              image={post.featuredImage}
+            />
+          ))}
+          <p className="bd-panel-title">Most viewed Posts</p>
+          {mostViewed.map((post) => (
+            <SidePostCard
+              key={`viewed-${post.id}`}
               title={post.title}
               excerpt={post.excerpt}
               category={post.category}

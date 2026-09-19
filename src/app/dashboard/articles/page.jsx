@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import DashboardSidebar from "../DashboardSidebar";
+import DashboardPager, { paginateItems } from "../DashboardPager";
 import "../dashboard.css";
 
 const statusLabel = {
@@ -27,6 +28,7 @@ export default function DashboardArticlesPage() {
   const [selected, setSelected] = useState([]);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [page, setPage] = useState(1);
 
   const loadArticles = useCallback(async () => {
     setLoading(true);
@@ -69,17 +71,26 @@ export default function DashboardArticlesPage() {
     });
   }, [articles, filter, category]);
 
+  const paged = useMemo(
+    () => paginateItems(visible, page),
+    [visible, page],
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter, category]);
+
   const allVisibleSelected =
-    visible.length > 0 && visible.every((item) => selected.includes(item.id));
+    paged.items.length > 0 && paged.items.every((item) => selected.includes(item.id));
 
   function toggleAll() {
     if (allVisibleSelected) {
-      setSelected((prev) => prev.filter((id) => !visible.some((item) => item.id === id)));
+      setSelected((prev) => prev.filter((id) => !paged.items.some((item) => item.id === id)));
       return;
     }
     setSelected((prev) => {
       const next = new Set(prev);
-      visible.forEach((item) => next.add(item.id));
+      paged.items.forEach((item) => next.add(item.id));
       return [...next];
     });
   }
@@ -221,7 +232,7 @@ export default function DashboardArticlesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {visible.map((item) => (
+                  {paged.items.map((item) => (
                     <tr key={item.id}>
                       <td>
                         <input
@@ -280,20 +291,14 @@ export default function DashboardArticlesPage() {
 
             <div className="db-articles-footer">
               <span>
-                Showing {visible.length ? `1–${visible.length}` : "0"} of {counts.all} articles
+                Showing {paged.total ? `${paged.start + 1}–${paged.end}` : "0"} of {paged.total} articles
               </span>
-              <div className="db-articles-pager">
-                <button type="button" className="db-icon-btn db-pager-btn" aria-label="Previous page">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                    <path d="M15 18l-6-6 6-6" />
-                  </svg>
-                </button>
-                <button type="button" className="db-icon-btn db-pager-btn" aria-label="Next page">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                    <path d="M9 18l6-6-6-6" />
-                  </svg>
-                </button>
-              </div>
+              <DashboardPager
+                page={paged.currentPage}
+                totalPages={paged.totalPages}
+                onPageChange={setPage}
+                disabled={loading}
+              />
             </div>
           </div>
         </main>
