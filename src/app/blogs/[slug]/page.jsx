@@ -54,20 +54,24 @@ export default async function BlogDetailPage({ params }) {
     notFound();
   }
 
-  const [recentPosts, relatedPosts, mostViewedPosts, comments] = await Promise.all([
+  const [recentPosts, relatedRaw, mostViewedPosts, comments] = await Promise.all([
     getRecentBlogs(7),
-    getRelatedBlogs(blog.slug, 10),
-    getMostViewedBlogs(10, blog.slug),
+    getRelatedBlogs(blog.slug, 12),
+    getMostViewedBlogs(6, blog.slug),
     getBlogComments(blog.slug),
   ]);
 
   const sideRecent = recentPosts
     .filter((item) => item.slug !== blog.slug)
     .slice(0, 6);
+  const recentIds = new Set(sideRecent.map((item) => item.id));
   const similar = recentPosts
     .filter((item) => item.slug !== blog.slug)
     .slice(0, 4);
-  const mostViewed = mostViewedPosts.slice(0, 10);
+  const relatedPosts = relatedRaw
+    .filter((item) => item.slug !== blog.slug && !recentIds.has(item.id))
+    .slice(0, 6);
+  const mostViewed = mostViewedPosts.slice(0, 6);
   const keywords = [
     blog.focusKeyword,
     ...(Array.isArray(blog.tags) ? blog.tags : []),
