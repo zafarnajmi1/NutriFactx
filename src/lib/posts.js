@@ -496,16 +496,42 @@ export async function getRelatedPublished(slug, limit = 6) {
     return getRecentPublished(limit);
   }
 
-  const { rows } = await pool.query(
+  const sameCategory = await pool.query(
     `${POST_CARD_SELECT}
-     WHERE p.status = 'PUBLISHED' AND p.slug <> $1
-     ORDER BY
-       CASE WHEN p.category = $2 THEN 0 ELSE 1 END,
-       COALESCE(p.published_at, p.created_at) DESC
+     WHERE p.status = 'PUBLISHED'
+       AND p.slug <> $1
+       AND p.category = $2
+     ORDER BY COALESCE(p.views, 0) DESC, COALESCE(p.published_at, p.created_at) DESC, p.id DESC
      LIMIT $3`,
     [slug, category, limit],
   );
-  return rows.map(mapPostToBlogCard);
+
+  const picked = [...sameCategory.rows];
+  if (picked.length >= limit) {
+    return picked.map(mapPostToBlogCard);
+  }
+
+  const remaining = limit - picked.length;
+  const excludeIds = picked.map((row) => row.id);
+  const params = [slug, category, remaining];
+  let excludeClause = "";
+  if (excludeIds.length) {
+    params.push(excludeIds);
+    excludeClause = `AND NOT (p.id = ANY($4::int[]))`;
+  }
+
+  const fill = await pool.query(
+    `${POST_CARD_SELECT}
+     WHERE p.status = 'PUBLISHED'
+       AND p.slug <> $1
+       AND p.category <> $2
+       ${excludeClause}
+     ORDER BY COALESCE(p.published_at, p.created_at) ASC, p.id ASC
+     LIMIT $3`,
+    params,
+  );
+
+  return [...picked, ...fill.rows].map(mapPostToBlogCard);
 }
 
 export async function searchPublishedPosts(query, limit = 6) {
