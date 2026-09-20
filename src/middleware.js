@@ -1,6 +1,32 @@
 import { NextResponse } from "next/server";
 
 const SESSION_COOKIE = "nf_dashboard_session";
+const CANONICAL_HOST = "nutrifactx.com";
+
+function parseHost(value) {
+  return String(value || "")
+    .split(",")[0]
+    .trim()
+    .split(":")[0]
+    .toLowerCase();
+}
+
+function redirectWwwToApex(request) {
+  const host = parseHost(request.headers.get("host"));
+  const forwarded = parseHost(request.headers.get("x-forwarded-host"));
+
+  // Already on the canonical host — do not redirect (avoids proxy header loops).
+  if (host === CANONICAL_HOST) return null;
+  if (host !== `www.${CANONICAL_HOST}` && forwarded !== `www.${CANONICAL_HOST}`) {
+    return null;
+  }
+
+  const dest = new URL(request.url);
+  dest.hostname = CANONICAL_HOST;
+  dest.protocol = "https:";
+  dest.port = "";
+  return NextResponse.redirect(dest, 301);
+}
 
 const MANAGER_ALLOWED_PREFIXES = [
   "/dashboard/articles",
@@ -28,6 +54,9 @@ function isManagerAllowedPath(pathname) {
 }
 
 export function middleware(request) {
+  const wwwRedirect = redirectWwwToApex(request);
+  if (wwwRedirect) return wwwRedirect;
+
   const { pathname } = request.nextUrl;
   const isDashboard = pathname.startsWith("/dashboard");
   if (!isDashboard) return NextResponse.next();
@@ -58,5 +87,8 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: [
+    "/",
+    "/((?!_next/static|_next/image|favicon.ico).*)",
+  ],
 };
