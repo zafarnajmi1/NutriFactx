@@ -2,7 +2,7 @@ import BlogsCard from "../common/BlogsCard";
 import { getMostViewedBlogs } from "@/lib/blogs";
 
 export default async function LatestBlogs() {
-  const latestPosts = await getMostViewedBlogs(10);
+  const latestPosts = await getMostViewedBlogs(8);
 
   if (!latestPosts.length) return null;
 
