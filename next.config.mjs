@@ -31,9 +31,21 @@ const nextConfig = {
     "@tiptap/extension-table-header",
     "@tiptap/extensions",
   ],
-  // Old slug after rename — real HTTP 308 so Facebook/LinkedIn bots follow it.
+  // Canonical host is nutrifactx.com (no www). www is a live duplicate in GSC.
   async redirects() {
     return [
+      {
+        source: "/",
+        has: [{ type: "host", value: "www.nutrifactx.com" }],
+        destination: "https://nutrifactx.com/",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.nutrifactx.com" }],
+        destination: "https://nutrifactx.com/:path*",
+        permanent: true,
+      },
       {
         source:
           "/blogs/how-to-avoid-seed-oils-when-eating-out-a-practical-guide",

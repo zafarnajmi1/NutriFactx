@@ -2,8 +2,16 @@ const FALLBACK_SITE_URL = "https://nutrifactx.com";
 
 export function getSiteUrl() {
   const fromEnv = String(process.env.NEXT_PUBLIC_SITE_URL || "").trim();
-  if (fromEnv) return fromEnv.replace(/\/$/, "");
-  return FALLBACK_SITE_URL;
+  const raw = (fromEnv || FALLBACK_SITE_URL).replace(/\/$/, "");
+  try {
+    const url = new URL(raw);
+    url.hostname = url.hostname.replace(/^www\./i, "");
+    url.protocol = "https:";
+    url.port = "";
+    return url.origin;
+  } catch {
+    return FALLBACK_SITE_URL;
+  }
 }
 
 export function absoluteUrl(pathOrUrl, siteUrl = getSiteUrl()) {

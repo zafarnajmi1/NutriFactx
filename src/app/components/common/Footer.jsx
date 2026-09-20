@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import BrandLogo from "./BrandLogo";
 import useSocialLinks from "./useSocialLinks";
@@ -52,57 +53,87 @@ const footerLinks = [
 
 export default function Footer() {
   const links = useSocialLinks();
+  const footerRef = useRef(null);
 
   const visibleSocialLinks = socialPlatforms.filter(
     (platform) => links[platform.key],
   );
 
+  useLayoutEffect(() => {
+    const el = footerRef.current;
+    if (!el) return;
+
+    const syncHeight = () => {
+      document.documentElement.style.setProperty(
+        "--nf-footer-height",
+        `${el.offsetHeight}px`,
+      );
+    };
+
+    syncHeight();
+    const observer = new ResizeObserver(syncHeight);
+    observer.observe(el);
+    window.addEventListener("resize", syncHeight);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", syncHeight);
+    };
+  }, [visibleSocialLinks.length]);
+
   return (
-    <footer className="fixed bottom-0 left-0 right-0 z-40 border-t border-nf-border bg-white/95 backdrop-blur-sm">
-      <div className="nf-page flex flex-col gap-4 py-5">
-        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-            <BrandLogo className="text-base" size={24} />
+    <footer
+      ref={footerRef}
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-nf-border bg-white/95 backdrop-blur-sm"
+    >
+      <div className="nf-page py-1 sm:py-5">
+        <div className="flex flex-col items-center gap-1 sm:flex-row sm:justify-between sm:gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-start sm:gap-2">
+            <BrandLogo className="text-sm sm:text-base max-sm:[&_img]:h-5 max-sm:[&_img]:w-5" size={24} />
             <span className="hidden text-nf-border sm:inline" aria-hidden="true">
               ·
             </span>
-            <p className="text-base text-nf-secondary">
-              © {new Date().getFullYear()} NutriFactx. All rights reserved.
+            <p className="text-xs text-nf-secondary sm:text-base">
+              © {new Date().getFullYear()} NutriFactx
+              <span className="hidden sm:inline">. All rights reserved.</span>
             </p>
           </div>
-          <nav className="flex flex-nowrap items-center justify-center gap-x-4 text-sm text-nf-secondary">
-            {footerLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="shrink-0 whitespace-nowrap transition-colors hover:text-nf-green"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="flex items-center gap-4">
-            {visibleSocialLinks.map((item) => (
-              <a
-                key={item.label}
-                href={links[item.key]}
-                aria-label={item.label}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex size-9 items-center justify-center text-nf-secondary transition-colors hover:text-nf-green"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden="true"
+          <div className="flex items-center justify-center gap-3 sm:contents">
+            <nav className="flex max-w-[70vw] items-center justify-center gap-x-2.5 overflow-x-auto text-xs text-nf-secondary sm:max-w-none sm:gap-x-4 sm:overflow-visible sm:text-sm">
+              {footerLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="shrink-0 whitespace-nowrap transition-colors hover:text-nf-green"
                 >
-                  <path d={item.path} />
-                </svg>
-              </a>
-            ))}
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+            <div className="flex items-center gap-2 sm:gap-4">
+              {visibleSocialLinks.map((item) => (
+                <a
+                  key={item.label}
+                  href={links[item.key]}
+                  aria-label={item.label}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex size-7 items-center justify-center text-nf-secondary transition-colors hover:text-nf-green sm:size-9"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    className="sm:h-[22px] sm:w-[22px]"
+                  >
+                    <path d={item.path} />
+                  </svg>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </div>

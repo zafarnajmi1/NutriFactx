@@ -115,7 +115,9 @@ export default function RootLayout({ children }) {
       <body className="min-h-screen flex flex-col bg-nf-surface text-nf-text antialiased">
         <AnalyticsTracker />
         <Header />
-        <main className="flex-1 pb-28 pt-[var(--nf-header-height)] sm:pb-24">{children}</main>
+        <main className="flex-1 pb-[var(--nf-footer-height)] pt-[var(--nf-header-height)]">
+          {children}
+        </main>
         <Footer />
       </body>
     </html>
