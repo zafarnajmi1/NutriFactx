@@ -5,12 +5,24 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 echo "==> Node $(node -v)"
-echo "==> Restoring tracked build files"
-git restore postcss.config.mjs package-lock.json 2>/dev/null || true
+
+# Never git-restore postcss — that reintroduced malware from an infected commit.
+# Always write the known-clean Tailwind config before build.
+cat > postcss.config.mjs << 'EOF'
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;
+EOF
+
+git restore package-lock.json 2>/dev/null || true
 rm -f pnpm-lock.yaml pnpm-workspace.yaml
 
-if grep -q "A8-1131" postcss.config.mjs 2>/dev/null; then
-  echo "ERROR: postcss.config.mjs is infected. Pull a clean main before building."
+if grep -q "A8-1131" postcss.config.mjs 2>/dev/null || [[ "$(wc -c < postcss.config.mjs)" -gt 500 ]]; then
+  echo "ERROR: postcss.config.mjs is infected. Aborting deploy."
   exit 1
 fi
 
