@@ -84,56 +84,54 @@ export default function Footer() {
   return (
     <footer
       ref={footerRef}
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-nf-border bg-white/95 backdrop-blur-sm"
+      className="fixed bottom-0 left-0 right-0 z-40 overflow-x-hidden border-t border-nf-border bg-white/95 backdrop-blur-sm"
     >
-      <div className="nf-page py-1 sm:py-5">
-        <div className="flex flex-col items-center gap-1 sm:flex-row sm:justify-between sm:gap-4">
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-start sm:gap-2">
-            <BrandLogo className="text-sm sm:text-base max-sm:[&_img]:h-5 max-sm:[&_img]:w-5" size={24} />
-            <span className="hidden text-nf-border sm:inline" aria-hidden="true">
+      <div className="nf-page w-full min-w-0 py-2 md:py-3 xl:py-5">
+        <div className="flex w-full min-w-0 flex-col items-center gap-2 xl:flex-row xl:justify-between xl:gap-4">
+          <div className="flex flex-col items-center gap-0.5 md:flex-row md:gap-2">
+            <BrandLogo className="text-sm xl:text-base max-xl:[&_img]:h-5 max-xl:[&_img]:w-5" size={24} />
+            <span className="hidden text-nf-border md:inline" aria-hidden="true">
               ·
             </span>
-            <p className="text-xs text-nf-secondary sm:text-base">
+            <p className="whitespace-nowrap text-center text-xs text-nf-secondary xl:text-base">
               © {new Date().getFullYear()} NutriFactx
-              <span className="hidden sm:inline">. All rights reserved.</span>
+              <span className="hidden md:inline">. All rights reserved.</span>
             </p>
           </div>
-          <div className="flex items-center justify-center gap-3 sm:contents">
-            <nav className="flex max-w-[70vw] items-center justify-center gap-x-2.5 overflow-x-auto text-xs text-nf-secondary sm:max-w-none sm:gap-x-4 sm:overflow-visible sm:text-sm">
-              {footerLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="shrink-0 whitespace-nowrap transition-colors hover:text-nf-green"
+          <nav className="flex w-full min-w-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-nf-secondary md:text-sm xl:w-auto xl:flex-nowrap xl:gap-x-4">
+            {footerLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="shrink-0 whitespace-nowrap transition-colors hover:text-nf-green"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="flex flex-wrap items-center justify-center gap-2 xl:gap-4">
+            {visibleSocialLinks.map((item) => (
+              <a
+                key={item.label}
+                href={links[item.key]}
+                aria-label={item.label}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex size-7 items-center justify-center text-nf-secondary transition-colors hover:text-nf-green xl:size-9"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  className="xl:h-[22px] xl:w-[22px]"
                 >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-            <div className="flex items-center gap-2 sm:gap-4">
-              {visibleSocialLinks.map((item) => (
-                <a
-                  key={item.label}
-                  href={links[item.key]}
-                  aria-label={item.label}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex size-7 items-center justify-center text-nf-secondary transition-colors hover:text-nf-green sm:size-9"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    aria-hidden="true"
-                    className="sm:h-[22px] sm:w-[22px]"
-                  >
-                    <path d={item.path} />
-                  </svg>
-                </a>
-              ))}
-            </div>
+                  <path d={item.path} />
+                </svg>
+              </a>
+            ))}
           </div>
         </div>
       </div>
