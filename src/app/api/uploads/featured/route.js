@@ -4,10 +4,8 @@ import {
   requireDashboardSession,
 } from "@/lib/session";
 import {
-  IMAGE_EXTENSIONS,
-  MAX_IMAGE_UPLOAD_BYTES,
-  resolveUploadImageMime,
-} from "@/lib/imageUpload";
+  prepareImageUpload,
+} from "@/lib/optimizeImage";
 import {
   deleteR2FeaturedImage,
   isR2Configured,
@@ -31,41 +29,22 @@ export async function POST(request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file");
-
-    if (!(file instanceof File) || !file.size) {
+    const prepared = await prepareImageUpload(file);
+    if (!prepared.ok) {
       return Response.json(
-        { error: "Please choose an image to upload." },
-        { status: 400 },
-      );
-    }
-
-    if (file.size > MAX_IMAGE_UPLOAD_BYTES) {
-      return Response.json(
-        { error: "Image must be under 10MB." },
-        { status: 413 },
-      );
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const actualType = resolveUploadImageMime(buffer, file.type);
-    if (!actualType || !IMAGE_EXTENSIONS[actualType]) {
-      return Response.json(
-        {
-          error:
-            "Unsupported image. Use JPG, PNG, WebP, GIF, AVIF, or BMP (any extension is fine).",
-        },
-        { status: 415 },
+        { error: prepared.error },
+        { status: prepared.status },
       );
     }
 
     const now = new Date();
     const year = String(now.getUTCFullYear());
     const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-    const key = `featured/${year}/${month}/${randomUUID()}.${IMAGE_EXTENSIONS[actualType]}`;
+    const key = `featured/${year}/${month}/${randomUUID()}.${prepared.extension}`;
     const url = await uploadToR2({
       key,
-      body: buffer,
-      contentType: actualType,
+      body: prepared.buffer,
+      contentType: prepared.contentType,
     });
 
     return Response.json(
@@ -73,7 +52,7 @@ export async function POST(request) {
         ok: true,
         url,
         key,
-        name: String(file.name || "Featured image").slice(0, 255),
+        name: prepared.originalName || "Featured image",
       },
       { status: 201 },
     );

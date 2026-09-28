@@ -774,7 +774,7 @@ export default function TipTapEditor({
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,.jpg,.jpeg,.png,.gif,.webp,.avif,.bmp"
                 hidden
                 onChange={(e) => {
                   stageMediaFiles(e.target.files);

@@ -15,7 +15,7 @@
   --background: var(--nf-surface);
   --foreground: var(--nf-text);
   --nf-header-height: 3.75rem;
-  --nf-footer-height: 4.5rem;
+  --nf-footer-height: 8.5rem;
   /* Fluid page shell — scales with viewport, wider on large screens */
   --nf-page-max: min(92rem, 96vw);
   --nf-prose-max: min(80rem, 94vw);
@@ -63,16 +63,22 @@ html {
 }
 
 @media (min-width: 640px) {
-  :root {
-    --nf-footer-height: 5.75rem;
-  }
-
   .nf-page {
     padding-inline: 1.5rem;
   }
 }
 
+@media (min-width: 768px) {
+  :root {
+    --nf-footer-height: 7rem;
+  }
+}
+
 @media (min-width: 1280px) {
+  :root {
+    --nf-footer-height: 5.75rem;
+  }
+
   .nf-page {
     padding-inline: 2rem;
   }
