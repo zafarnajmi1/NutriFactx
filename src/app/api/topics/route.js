@@ -1,17 +1,30 @@
 import { getAllBlogs } from "@/lib/blogs";
-import { listTopicClusters } from "@/lib/clusters";
+import { listCategoryNames } from "@/lib/categories";
+import { slugifyTopic } from "@/lib/clusters";
 
-/** Public category/topic hubs for the header dropdown. */
+/** Public header dropdown: categories saved in the dashboard. */
 export async function GET() {
   try {
-    const blogs = await getAllBlogs();
-    const topics = listTopicClusters(blogs).map((cluster) => ({
-      slug: cluster.slug,
-      name: cluster.name,
+    const names = await listCategoryNames();
+    const topics = names.map((name) => ({
+      name,
+      slug: slugifyTopic(name),
     }));
     return Response.json({ topics });
   } catch (error) {
     console.error("GET /api/topics", error);
-    return Response.json({ topics: [] });
+    try {
+      const blogs = await getAllBlogs();
+      const fallback = [
+        ...new Set(
+          (Array.isArray(blogs) ? blogs : [])
+            .map((blog) => String(blog.category || "").trim())
+            .filter(Boolean),
+        ),
+      ].map((name) => ({ name, slug: slugifyTopic(name) }));
+      return Response.json({ topics: fallback });
+    } catch {
+      return Response.json({ topics: [] });
+    }
   }
 }

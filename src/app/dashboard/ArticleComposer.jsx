@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import TipTapEditor from "./TipTapEditor";
+import AddCategoryButton from "./AddCategoryButton";
 import { isLikelyImageFile } from "@/lib/imageUpload";
+import { DEFAULT_ARTICLE_CATEGORIES as ARTICLE_CATEGORIES } from "@/lib/categoryDefaults";
+
+export { ARTICLE_CATEGORIES };
 
 const SITE_URL = String(
   process.env.NEXT_PUBLIC_SITE_URL || "https://nutrifactx.com",
@@ -28,17 +32,6 @@ function isSiteBlogCanonical(url, slug) {
     clean === `${pathOnly}/blogs/${slug}`
   );
 }
-
-export const ARTICLE_CATEGORIES = [
-  "Nutrition",
-  "Fitness",
-  "Mental health",
-  "Sleep",
-  "Diabetes",
-  "Wellness",
-  "Recipes",
-  "Health",
-];
 
 export function slugify(text) {
   return String(text || "")
@@ -389,6 +382,7 @@ export default function ArticleComposer({
   const [featuredError, setFeaturedError] = useState("");
   const [featuredUploading, setFeaturedUploading] = useState(false);
   const [authors, setAuthors] = useState([]);
+  const [categories, setCategories] = useState(ARTICLE_CATEGORIES);
   // Once a social field is edited by hand, stop overwriting it from SEO fields.
   const [socialTouched, setSocialTouched] = useState({
     ogTitle: Boolean(initialForm?.ogTitle),
@@ -405,6 +399,15 @@ export default function ArticleComposer({
         if (!response.ok) return;
         if (!cancelled) {
           setAuthors(Array.isArray(data.authors) ? data.authors : []);
+        }
+      })
+      .catch(() => {});
+    fetch("/api/categories")
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) return;
+        if (!cancelled && Array.isArray(data.categories) && data.categories.length) {
+          setCategories(data.categories);
         }
       })
       .catch(() => {});
@@ -731,18 +734,32 @@ export default function ArticleComposer({
             </p>
 
             <div className="db-field-row db-field-row-3">
-              <label className="db-field">
-                Category
+              <div className="db-field">
+                <span className="db-field-label-row">
+                  Category
+                  <AddCategoryButton
+                    compact
+                    onAdded={(name) => {
+                      setCategories((prev) =>
+                        prev.includes(name) ? prev : [...prev, name].sort((a, b) => a.localeCompare(b)),
+                      );
+                      update("category", name);
+                    }}
+                  />
+                </span>
                 <select
                   className="db-select"
                   value={form.category}
                   onChange={(e) => update("category", e.target.value)}
                 >
-                  {ARTICLE_CATEGORIES.map((item) => (
+                  {(categories.includes(form.category)
+                    ? categories
+                    : [form.category, ...categories]
+                  ).map((item) => (
                     <option key={item}>{item}</option>
                   ))}
                 </select>
-              </label>
+              </div>
               <label className="db-field">
                 Status
                 <select

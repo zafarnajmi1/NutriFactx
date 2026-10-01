@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAllBlogs } from "@/lib/blogs";
-import { listTopicClusters } from "@/lib/clusters";
+import { listCategoryNames } from "@/lib/categories";
+import { listDashboardCategoryHubs } from "@/lib/clusters";
 import { absoluteUrl, getSiteUrl, sanitizeMetaText } from "@/lib/seo";
 import { connection } from "next/server";
 
@@ -31,8 +32,11 @@ export async function generateMetadata() {
 
 export default async function TopicsIndexPage() {
   await connection();
-  const blogs = await getAllBlogs();
-  const clusters = listTopicClusters(blogs);
+  const [blogs, categoryNames] = await Promise.all([
+    getAllBlogs(),
+    listCategoryNames().catch(() => []),
+  ]);
+  const clusters = listDashboardCategoryHubs(categoryNames, blogs);
   const siteUrl = getSiteUrl();
   const pageUrl = absoluteUrl("/topics", siteUrl);
   const jsonLd = {
@@ -67,7 +71,7 @@ export default async function TopicsIndexPage() {
       <div className="nf-page py-8 sm:py-10">
         <h1 className="nf-section-title mb-3.5">Categories</h1>
         {clusters.length === 0 ? (
-          <p className="text-nf-secondary">No topics yet.</p>
+          <p className="text-nf-secondary">No categories yet.</p>
         ) : (
           <ul className="nf-posts-grid">
             {clusters.map((cluster) => (

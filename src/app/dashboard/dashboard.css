@@ -1251,9 +1251,59 @@
   padding: 22px 22px 18px;
   border: 1px solid var(--db-border);
   border-radius: 12px;
-  background: var(--db-surface);
+  background: #ffffff;
   box-shadow: 0 16px 40px rgba(30, 42, 34, 0.18);
 }
+
+.dashboard-isolate .db-category-modal {
+  width: min(380px, 100%);
+  padding: 22px;
+  border: 1px solid #e4e2d8;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 16px 40px rgba(30, 42, 34, 0.18);
+}
+
+.dashboard-isolate .db-category-modal h3 {
+  margin: 0 0 12px;
+  color: #1e2a22;
+}
+
+.dashboard-isolate .db-category-modal .db-input {
+  width: 100%;
+  margin: 0 0 16px;
+  background: #ffffff;
+}
+
+.dashboard-isolate .db-add-category-error {
+  margin: -8px 0 16px;
+  color: var(--db-red);
+  font-size: 12.7px;
+}
+
+.dashboard-isolate .db-field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dashboard-isolate .db-add-category-btn {
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--db-border);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--db-ink);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.dashboard-isolate .db-add-category-btn:hover {
+  background: #f2f1ea;
+}
+
 
 .dashboard-isolate .db-confirm-modal h3 {
   margin: 0 0 8px;
