@@ -53,7 +53,13 @@ export function SidePostCard({
       <div className="thumb">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={image} alt={title || "Article cover"} className="thumb-image" />
+          <img
+            src={image}
+            alt={title || "Article cover"}
+            className="thumb-image"
+            loading="lazy"
+            decoding="async"
+          />
         ) : (
           <div className="thumb-tone" style={{ background: toneFor(seed || title) }} />
         )}

@@ -4,6 +4,7 @@ import BlogComments from "../../components/blog-components/BlogComments";
 import { SidePostCard } from "../../components/blog-components/BlogDetailCards";
 import BlogsCard from "../../components/common/BlogsCard";
 import {
+  getAllBlogs,
   getBlogBySlug,
   getBlogComments,
   getBlogMetaBySlug,
@@ -12,8 +13,22 @@ import {
   getRecentBlogs,
   getRelatedBlogs,
 } from "@/lib/blogs";
+import { getPrimaryCluster } from "@/lib/clusters";
 import { buildArticleBreadcrumbJsonLd, buildArticleJsonLd, buildArticleMetadata } from "@/lib/seo";
 import "./blog-detail.css";
+
+function withLazyContentImages(html) {
+  return String(html || "").replace(/<img\b([^>]*?)(\s*\/?)>/gi, (full, attrs, close) => {
+    let next = attrs;
+    if (!/\bloading\s*=/i.test(next)) {
+      next += ' loading="lazy"';
+    }
+    if (!/\bdecoding\s*=/i.test(next)) {
+      next += ' decoding="async"';
+    }
+    return `<img${next}${close}>`;
+  });
+}
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -54,12 +69,14 @@ export default async function BlogDetailPage({ params }) {
     notFound();
   }
 
-  const [recentPosts, relatedRaw, mostViewedPosts, comments] = await Promise.all([
-    getRecentBlogs(7),
-    getRelatedBlogs(blog.slug, 12),
-    getMostViewedBlogs(6, blog.slug),
-    getBlogComments(blog.slug),
-  ]);
+  const [recentPosts, relatedRaw, mostViewedPosts, comments, allBlogs] =
+    await Promise.all([
+      getRecentBlogs(7),
+      getRelatedBlogs(blog.slug, 12),
+      getMostViewedBlogs(6, blog.slug),
+      getBlogComments(blog.slug),
+      getAllBlogs(),
+    ]);
 
   const sideRecent = recentPosts
     .filter((item) => item.slug !== blog.slug)
@@ -81,8 +98,9 @@ export default async function BlogDetailPage({ params }) {
     .filter(Boolean);
 
   const showBannerImage = Boolean(blog.featuredImage);
+  const cluster = getPrimaryCluster(blog, allBlogs);
   const jsonLd = buildArticleJsonLd(blog);
-  const breadcrumbLd = buildArticleBreadcrumbJsonLd(blog);
+  const breadcrumbLd = buildArticleBreadcrumbJsonLd(blog, cluster);
 
   return (
     <div className="blog-detail-page">
@@ -110,7 +128,13 @@ export default async function BlogDetailPage({ params }) {
         aria-label={showBannerImage ? blog.title : undefined}
       >
         <div className="bd-banner-inner">
-          <span className="bd-eyebrow">{blog.category}</span>
+          {cluster?.slug ? (
+            <Link href={`/topics/${cluster.slug}`} className="bd-eyebrow">
+              {blog.category}
+            </Link>
+          ) : (
+            <span className="bd-eyebrow">{blog.category}</span>
+          )}
           <h1>{blog.title}</h1>
           <div className="bd-banner-sub">
             By{" "}
@@ -178,7 +202,9 @@ export default async function BlogDetailPage({ params }) {
               {blog.contentHtml ? (
                 <div
                   className="bd-article-html"
-                  dangerouslySetInnerHTML={{ __html: blog.contentHtml }}
+                  dangerouslySetInnerHTML={{
+                    __html: withLazyContentImages(blog.contentHtml),
+                  }}
                 />
               ) : (
                 <p>{blog.excerpt}</p>

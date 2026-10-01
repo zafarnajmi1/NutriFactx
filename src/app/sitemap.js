@@ -1,17 +1,40 @@
 import { listAuthors } from "@/lib/authors";
 import { getAllBlogs } from "@/lib/blogs";
+import { listTopicClusters } from "@/lib/clusters";
 import { getSiteUrl } from "@/lib/seo";
-import { listSiteSeoPages } from "@/lib/siteSeo";
+import { SITE_SEO_PAGES, listSiteSeoPages } from "@/lib/siteSeo";
+
+function safeDate(value) {
+  const date = value ? new Date(value) : new Date();
+  return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
+async function safeList(fn, fallback = []) {
+  try {
+    const result = await fn();
+    return Array.isArray(result) ? result : fallback;
+  } catch (error) {
+    console.error("[sitemap]", error?.message || error);
+    return fallback;
+  }
+}
 
 export default async function sitemap() {
   const siteUrl = getSiteUrl();
   const [blogs, seoPages, authors] = await Promise.all([
-    getAllBlogs(),
-    listSiteSeoPages(),
-    listAuthors({ activeOnly: true }).catch(() => []),
+    safeList(() => getAllBlogs()),
+    safeList(() => listSiteSeoPages()),
+    safeList(() => listAuthors({ activeOnly: true })),
   ]);
 
-  const staticRoutes = seoPages
+  const staticSource = seoPages.length
+    ? seoPages
+    : SITE_SEO_PAGES.map((page) => ({
+        ...page,
+        seo: { robotsIndex: true },
+      }));
+
+  const staticRoutes = staticSource
     .filter((page) => page.seo?.robotsIndex !== false)
     .map((page) => {
       const path = page.path === "/" ? "" : page.path;
@@ -25,15 +48,15 @@ export default async function sitemap() {
     });
 
   const articleRoutes = blogs
-    .filter((blog) => blog.robotsIndex !== false)
+    .filter((blog) => blog?.slug && blog.robotsIndex !== false)
     .map((blog) => ({
       url: `${siteUrl}/blogs/${blog.slug}`,
-      lastModified: blog.updatedAt ? new Date(blog.updatedAt) : new Date(),
+      lastModified: safeDate(blog.updatedAt),
       changeFrequency: "weekly",
       priority: 0.8,
     }));
 
-  const authorRoutes = (Array.isArray(authors) ? authors : [])
+  const authorRoutes = authors
     .filter((author) => author?.slug)
     .map((author) => ({
       url: `${siteUrl}/authors/${author.slug}`,
@@ -42,5 +65,12 @@ export default async function sitemap() {
       priority: 0.5,
     }));
 
-  return [...staticRoutes, ...articleRoutes, ...authorRoutes];
+  const clusterRoutes = listTopicClusters(blogs).map((cluster) => ({
+    url: `${siteUrl}/topics/${cluster.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
+
+  return [...staticRoutes, ...articleRoutes, ...clusterRoutes, ...authorRoutes];
 }
