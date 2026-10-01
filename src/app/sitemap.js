@@ -65,12 +65,20 @@ export default async function sitemap() {
       priority: 0.5,
     }));
 
-  const clusterRoutes = listTopicClusters(blogs).map((cluster) => ({
-    url: `${siteUrl}/topics/${cluster.slug}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly",
-    priority: 0.7,
-  }));
+  const clusterRoutes = [
+    {
+      url: `${siteUrl}/topics`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.75,
+    },
+    ...listTopicClusters(blogs).map((cluster) => ({
+      url: `${siteUrl}/topics/${cluster.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    })),
+  ];
 
   return [...staticRoutes, ...articleRoutes, ...clusterRoutes, ...authorRoutes];
 }

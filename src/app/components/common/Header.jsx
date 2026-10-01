@@ -19,7 +19,10 @@ export default function Header() {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const searchRef = useRef(null);
+  const categoriesRef = useRef(null);
 
   useEffect(() => {
     const q = query.trim();
@@ -49,9 +52,29 @@ export default function Header() {
   }, [query]);
 
   useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/topics", { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : { topics: [] }))
+      .then((data) => {
+        setCategories(Array.isArray(data.topics) ? data.topics : []);
+      })
+      .catch(() => {
+        setCategories([]);
+      });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    setCategoriesOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
     function handleClickOutside(event) {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setOpen(false);
+      }
+      if (categoriesRef.current && !categoriesRef.current.contains(event.target)) {
+        setCategoriesOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -72,13 +95,83 @@ export default function Header() {
     }
   }
 
+  const categoriesActive =
+    pathname === "/topics" || pathname.startsWith("/topics/");
+
   return (
     <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-nf-border bg-white/95 backdrop-blur-sm">
       <div className="nf-page flex items-center justify-between gap-4 py-3.5">
         <BrandLogo className="shrink-0 text-lg" size={30} />
 
         <nav className="hidden items-center gap-7 text-sm text-nf-secondary md:flex">
-          {navLinks.map((link) => {
+          {navLinks.slice(0, 2).map((link) => {
+            const active = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`transition-colors hover:text-nf-green ${
+                  active ? "font-medium text-nf-green" : ""
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+
+          <div ref={categoriesRef} className="relative">
+            <button
+              type="button"
+              className={`inline-flex items-center gap-1 transition-colors hover:text-nf-green ${
+                categoriesActive ? "font-medium text-nf-green" : ""
+              }`}
+              aria-expanded={categoriesOpen}
+              aria-haspopup="listbox"
+              onClick={() => setCategoriesOpen((value) => !value)}
+            >
+              Categories
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`transition-transform ${categoriesOpen ? "rotate-180" : ""}`}
+                aria-hidden="true"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+            {categoriesOpen ? (
+              <div className="absolute left-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-nf-border bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
+                <ul className="max-h-64 overflow-y-auto py-1" role="listbox">
+                  {categories.length > 0 ? (
+                    categories.map((item) => (
+                      <li key={item.slug}>
+                        <Link
+                          href={`/topics/${item.slug}`}
+                          className="block px-3.5 py-2 text-sm text-nf-text transition hover:bg-nf-green-soft hover:text-nf-green"
+                          onClick={() => setCategoriesOpen(false)}
+                        >
+                          {item.name}
+                        </Link>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="px-3.5 py-3 text-sm text-nf-muted">
+                      No categories yet.
+                    </li>
+                  )}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+
+          {navLinks.slice(2).map((link) => {
             const active = pathname === link.href;
             return (
               <Link
@@ -222,7 +315,7 @@ export default function Header() {
             {open && query.trim().length > 0 ? (
               <div className="mt-2 overflow-hidden rounded-xl border border-nf-border bg-white">
                 {suggestions.length > 0 ? (
-                  <ul className="py-1">
+                  <ul className="max-h-48 overflow-y-auto py-1">
                     {suggestions.map((blog) => (
                       <li key={blog.id}>
                         <button
@@ -245,7 +338,63 @@ export default function Header() {
 
           <nav>
             <ul className="flex flex-col gap-1">
-              {navLinks.map((link) => (
+              {navLinks.slice(0, 2).map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="block rounded-lg px-3 py-2 text-sm text-nf-secondary hover:bg-nf-green-soft hover:text-nf-green"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-nf-secondary hover:bg-nf-green-soft hover:text-nf-green"
+                  aria-expanded={categoriesOpen}
+                  onClick={() => setCategoriesOpen((value) => !value)}
+                >
+                  Categories
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className={`transition-transform ${categoriesOpen ? "rotate-180" : ""}`}
+                    aria-hidden="true"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </button>
+                {categoriesOpen ? (
+                  <ul className="mt-1 max-h-48 overflow-y-auto rounded-lg border border-nf-border py-1">
+                    {categories.length > 0 ? (
+                      categories.map((item) => (
+                        <li key={item.slug}>
+                          <Link
+                            href={`/topics/${item.slug}`}
+                            className="block px-3 py-2 text-sm text-nf-text hover:bg-nf-green-soft hover:text-nf-green"
+                            onClick={() => {
+                              setCategoriesOpen(false);
+                              setMenuOpen(false);
+                            }}
+                          >
+                            {item.name}
+                          </Link>
+                        </li>
+                      ))
+                    ) : (
+                      <li className="px-3 py-2 text-sm text-nf-muted">No categories yet.</li>
+                    )}
+                  </ul>
+                ) : null}
+              </li>
+              {navLinks.slice(2).map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
