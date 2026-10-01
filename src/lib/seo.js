@@ -202,33 +202,44 @@ export function buildArticleJsonLd(blog) {
   };
 }
 
-export function buildArticleBreadcrumbJsonLd(blog) {
+export function buildArticleBreadcrumbJsonLd(blog, cluster) {
   if (!blog) return null;
   const siteUrl = getSiteUrl();
   const articleUrl = resolveArticleUrl(blog, siteUrl);
+  const items = [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: siteUrl,
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Blogs",
+      item: absoluteUrl("/blogs", siteUrl),
+    },
+  ];
+
+  if (cluster?.slug && cluster?.name) {
+    items.push({
+      "@type": "ListItem",
+      position: 3,
+      name: cluster.name,
+      item: absoluteUrl(`/topics/${cluster.slug}`, siteUrl),
+    });
+  }
+
+  items.push({
+    "@type": "ListItem",
+    position: items.length + 1,
+    name: blog.title,
+    item: articleUrl,
+  });
 
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: siteUrl,
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Blogs",
-        item: absoluteUrl("/blogs", siteUrl),
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: blog.title,
-        item: articleUrl,
-      },
-    ],
+    itemListElement: items,
   };
 }

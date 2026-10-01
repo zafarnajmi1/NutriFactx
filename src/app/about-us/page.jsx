@@ -145,7 +145,12 @@ export default async function AboutUs() {
               <div key={member.id} className="ab-team-card">
                 {member.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={member.image} alt={member.name} />
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 ) : (
                   <div className="ab-team-placeholder" aria-hidden="true">
                     {member.name

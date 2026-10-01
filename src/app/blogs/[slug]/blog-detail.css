@@ -69,6 +69,11 @@
   letter-spacing: 0;
 }
 
+.blog-detail-page a.bd-eyebrow {
+  text-decoration: none;
+  color: #085041;
+}
+
 .blog-detail-page .bd-banner h1 {
   max-width: min(56rem, 100%);
   margin: 0 0 12px;

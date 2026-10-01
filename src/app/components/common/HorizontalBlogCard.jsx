@@ -67,6 +67,8 @@ export default function HorizontalBlogCard({
             src={image}
             alt={title || "Article cover"}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            loading="lazy"
+            decoding="async"
           />
         ) : (
           <div className={`h-full w-full bg-gradient-to-br ${tone}`} aria-hidden="true" />
