@@ -1,6 +1,7 @@
 import { listAuthors } from "@/lib/authors";
 import { getAllBlogs } from "@/lib/blogs";
-import { listTopicClusters } from "@/lib/clusters";
+import { listCategoryNames } from "@/lib/categories";
+import { listTopicClusters, slugifyTopic } from "@/lib/clusters";
 import { getSiteUrl } from "@/lib/seo";
 import { SITE_SEO_PAGES, listSiteSeoPages } from "@/lib/siteSeo";
 
@@ -21,10 +22,11 @@ async function safeList(fn, fallback = []) {
 
 export default async function sitemap() {
   const siteUrl = getSiteUrl();
-  const [blogs, seoPages, authors] = await Promise.all([
+  const [blogs, seoPages, authors, categoryNames] = await Promise.all([
     safeList(() => getAllBlogs()),
     safeList(() => listSiteSeoPages()),
     safeList(() => listAuthors({ activeOnly: true })),
+    safeList(() => listCategoryNames()),
   ]);
 
   const staticSource = seoPages.length
@@ -65,6 +67,18 @@ export default async function sitemap() {
       priority: 0.5,
     }));
 
+  const clustered = listTopicClusters(blogs);
+  const seenTopicSlugs = new Set(clustered.map((cluster) => cluster.slug));
+  const dashboardTopicRoutes = categoryNames
+    .map((name) => slugifyTopic(name))
+    .filter((slug) => slug && !seenTopicSlugs.has(slug))
+    .map((slug) => ({
+      url: `${siteUrl}/topics/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    }));
+
   const clusterRoutes = [
     {
       url: `${siteUrl}/topics`,
@@ -72,12 +86,13 @@ export default async function sitemap() {
       changeFrequency: "daily",
       priority: 0.75,
     },
-    ...listTopicClusters(blogs).map((cluster) => ({
+    ...clustered.map((cluster) => ({
       url: `${siteUrl}/topics/${cluster.slug}`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.7,
     })),
+    ...dashboardTopicRoutes,
   ];
 
   return [...staticRoutes, ...articleRoutes, ...clusterRoutes, ...authorRoutes];

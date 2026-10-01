@@ -538,6 +538,7 @@ export async function searchPublishedPosts(query, limit = 6) {
   await ensureAuthorsTable();
   const q = String(query || "").trim();
   if (!q) return [];
+  const like = `%${q}%`;
   const { rows } = await pool.query(
     `${POST_CARD_SELECT}
      WHERE p.status = 'PUBLISHED'
@@ -546,10 +547,23 @@ export async function searchPublishedPosts(query, limit = 6) {
          OR COALESCE(p.excerpt, '') ILIKE $1
          OR p.category ILIKE $1
          OR COALESCE(p.author_name, '') ILIKE $1
+         OR p.slug ILIKE $1
+         OR COALESCE(p.focus_keyword, '') ILIKE $1
+         OR COALESCE(p.tags::text, '') ILIKE $1
+         OR COALESCE(p.meta_title, '') ILIKE $1
+         OR COALESCE(p.meta_description, '') ILIKE $1
        )
-     ORDER BY COALESCE(p.published_at, p.created_at) DESC
+     ORDER BY
+       CASE
+         WHEN p.category ILIKE $1 THEN 0
+         WHEN COALESCE(p.focus_keyword, '') ILIKE $1 THEN 1
+         WHEN COALESCE(p.tags::text, '') ILIKE $1 THEN 1
+         WHEN p.slug ILIKE $1 THEN 2
+         ELSE 3
+       END,
+       COALESCE(p.published_at, p.created_at) DESC
      LIMIT $2`,
-    [`%${q}%`, limit],
+    [like, limit],
   );
   return rows.map(mapPostToBlogCard);
 }

@@ -1,5 +1,6 @@
 import BlogsList from "../../components/blog-components/BlogsList";
 import { getAllBlogs } from "@/lib/blogs";
+import { listCategoryNames } from "@/lib/categories";
 import { getTopicCluster } from "@/lib/clusters";
 import { absoluteUrl, getSiteUrl, sanitizeMetaText } from "@/lib/seo";
 import { connection } from "next/server";
@@ -8,11 +9,14 @@ import { notFound } from "next/navigation";
 export async function generateMetadata({ params }) {
   await connection();
   const { slug } = await params;
-  const blogs = await getAllBlogs();
-  const cluster = getTopicCluster(slug, blogs);
+  const [blogs, dashboardCategories] = await Promise.all([
+    getAllBlogs(),
+    listCategoryNames().catch(() => []),
+  ]);
+  const cluster = getTopicCluster(slug, blogs, dashboardCategories);
   if (!cluster) {
     return {
-      title: "Topic not found",
+      title: "Category not found",
       robots: { index: false, follow: false },
     };
   }
@@ -52,8 +56,11 @@ export async function generateMetadata({ params }) {
 export default async function TopicClusterPage({ params }) {
   await connection();
   const { slug } = await params;
-  const blogs = await getAllBlogs();
-  const cluster = getTopicCluster(slug, blogs);
+  const [blogs, dashboardCategories] = await Promise.all([
+    getAllBlogs(),
+    listCategoryNames().catch(() => []),
+  ]);
+  const cluster = getTopicCluster(slug, blogs, dashboardCategories);
   if (!cluster) notFound();
 
   const siteUrl = getSiteUrl();

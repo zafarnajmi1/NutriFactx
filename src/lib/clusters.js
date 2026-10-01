@@ -224,10 +224,50 @@ export function listTopicClusters(blogs = []) {
     .sort((left, right) => right.posts.length - left.posts.length);
 }
 
-export function getTopicCluster(slug, blogs = []) {
+export function getTopicCluster(slug, blogs = [], dashboardCategories = []) {
   const clean = slugifyTopic(slug);
   if (!clean) return null;
-  return listTopicClusters(blogs).find((cluster) => cluster.slug === clean) || null;
+
+  const fromPosts = listTopicClusters(blogs).find(
+    (cluster) => cluster.slug === clean,
+  );
+  if (fromPosts) return fromPosts;
+
+  const name = (dashboardCategories || []).find(
+    (item) => slugifyTopic(item) === clean,
+  );
+  if (!name) return null;
+
+  const posts = publishedPosts(blogs).filter(
+    (blog) => slugifyTopic(blog.category || "") === clean,
+  );
+  return {
+    ...buildClusterMeta(name, "category"),
+    posts,
+  };
+}
+
+/** Hubs for dashboard-created categories. Clustering of posts is unchanged. */
+export function listDashboardCategoryHubs(categoryNames = [], blogs = []) {
+  const published = publishedPosts(blogs);
+  const seen = new Set();
+  const hubs = [];
+
+  for (const raw of categoryNames) {
+    const name = String(raw || "").trim();
+    const slug = slugifyTopic(name);
+    if (!slug || seen.has(slug)) continue;
+    seen.add(slug);
+    const posts = published.filter(
+      (blog) => slugifyTopic(blog.category || "") === slug,
+    );
+    hubs.push({
+      ...buildClusterMeta(name, "category"),
+      posts,
+    });
+  }
+
+  return hubs;
 }
 
 /** Best hub for this article from the same live/local post set. */

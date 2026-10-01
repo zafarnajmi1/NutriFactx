@@ -28,40 +28,55 @@ export default function Header() {
     const q = query.trim();
     if (q.length < 1) {
       setSuggestions([]);
-      return;
+      return undefined;
     }
 
-    const controller = new AbortController();
+    let cancelled = false;
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/posts/search?q=${encodeURIComponent(q)}`, {
-          signal: controller.signal,
-        });
-        if (!res.ok) return;
+        const res = await fetch(`/api/posts/search?q=${encodeURIComponent(q)}`);
+        if (cancelled || !res.ok) return;
         const data = await res.json();
-        setSuggestions(Array.isArray(data.posts) ? data.posts : []);
+        if (cancelled) return;
+        const categoryHits = Array.isArray(data.categories)
+          ? data.categories.map((item) => ({
+              id: `category-${item.slug}`,
+              kind: "category",
+              slug: item.slug,
+              category: "Category",
+              title: item.name,
+              excerpt: `Browse ${item.name} articles`,
+            }))
+          : [];
+        const postHits = Array.isArray(data.posts)
+          ? data.posts.map((post) => ({ ...post, kind: "post" }))
+          : [];
+        setSuggestions([...categoryHits, ...postHits]);
       } catch {
-        /* aborted or network — ignore */
+        /* ignore network errors from stale searches */
       }
     }, 200);
 
     return () => {
+      cancelled = true;
       clearTimeout(timer);
-      controller.abort();
     };
   }, [query]);
 
   useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/topics", { signal: controller.signal })
+    let cancelled = false;
+    fetch("/api/topics")
       .then((res) => (res.ok ? res.json() : { topics: [] }))
       .then((data) => {
+        if (cancelled) return;
         setCategories(Array.isArray(data.topics) ? data.topics : []);
       })
       .catch(() => {
-        setCategories([]);
+        if (!cancelled) setCategories([]);
       });
-    return () => controller.abort();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -81,17 +96,22 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  function goToBlog(slug) {
+  function goToSuggestion(item) {
+    if (!item?.slug) return;
     setQuery("");
     setOpen(false);
     setMenuOpen(false);
-    router.push(`/blogs/${slug}`);
+    if (item.kind === "category") {
+      router.push(`/topics/${item.slug}`);
+      return;
+    }
+    router.push(`/blogs/${item.slug}`);
   }
 
   function handleSubmit(event) {
     event.preventDefault();
     if (suggestions[0]) {
-      goToBlog(suggestions[0].slug);
+      goToSuggestion(suggestions[0]);
     }
   }
 
@@ -234,7 +254,7 @@ export default function Header() {
                       <li key={blog.id}>
                         <button
                           type="button"
-                          onClick={() => goToBlog(blog.slug)}
+                          onClick={() => goToSuggestion(blog)}
                           className="flex w-full flex-col gap-0.5 px-3.5 py-2.5 text-left transition hover:bg-nf-green-soft"
                         >
                           <span className="text-xs font-medium text-nf-green">{blog.category}</span>
@@ -320,7 +340,7 @@ export default function Header() {
                       <li key={blog.id}>
                         <button
                           type="button"
-                          onClick={() => goToBlog(blog.slug)}
+                          onClick={() => goToSuggestion(blog)}
                           className="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left hover:bg-nf-green-soft"
                         >
                           <span className="text-xs font-medium text-nf-green">{blog.category}</span>

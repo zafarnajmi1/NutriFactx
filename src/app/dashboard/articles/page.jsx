@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import DashboardSidebar from "../DashboardSidebar";
 import DashboardPager, { paginateItems } from "../DashboardPager";
+import AddCategoryButton from "../AddCategoryButton";
 import "../dashboard.css";
 
 const statusLabel = {
@@ -25,6 +26,7 @@ export default function DashboardArticlesPage() {
   const [loadError, setLoadError] = useState("");
   const [filter, setFilter] = useState("all");
   const [category, setCategory] = useState("all");
+  const [extraCategories, setExtraCategories] = useState([]);
   const [selected, setSelected] = useState([]);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -50,9 +52,12 @@ export default function DashboardArticlesPage() {
   }, [loadArticles]);
 
   const categories = useMemo(() => {
-    const set = new Set(articles.map((a) => a.cat).filter(Boolean));
-    return [...set].sort();
-  }, [articles]);
+    const set = new Set([
+      ...articles.map((a) => a.cat).filter(Boolean),
+      ...extraCategories,
+    ]);
+    return [...set].sort((left, right) => left.localeCompare(right));
+  }, [articles, extraCategories]);
 
   const counts = useMemo(() => {
     return {
@@ -163,6 +168,13 @@ export default function DashboardArticlesPage() {
                 </svg>
                 New article
               </Link>
+              <AddCategoryButton
+                onAdded={(name) => {
+                  setExtraCategories((prev) =>
+                    prev.includes(name) ? prev : [...prev, name],
+                  );
+                }}
+              />
             </div>
           </div>
 
