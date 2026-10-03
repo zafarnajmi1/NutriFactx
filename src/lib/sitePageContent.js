@@ -105,7 +105,7 @@ const DEFAULT_SECTIONS = {
     },
     {
       title: "11. Contact",
-      body: "Questions about these terms can be sent to hello@nutrifactx.com or through the Contact page.",
+      body: "Questions about these terms can be sent to nutrifactx7@gmail.com or through the Contact page.",
     },
   ],
 };
@@ -160,7 +160,9 @@ function normalizeSections(sections) {
   return sections
     .map((section) => ({
       title: String(section?.title || "").trim(),
-      body: String(section?.body || "").trim(),
+      body: String(section?.body || "")
+        .replaceAll("hello@nutrifactx.com", "nutrifactx7@gmail.com")
+        .trim(),
     }))
     .filter((section) => section.title || section.body);
 }

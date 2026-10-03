@@ -37,7 +37,7 @@ export default async function ContactUs() {
                   </div>
                   <div>
                     <p className="label">Email</p>
-                    <p className="value">hello@nutrifactx.com</p>
+                    <p className="value">nutrifactx7@gmail.com</p>
                   </div>
                 </div>
 
