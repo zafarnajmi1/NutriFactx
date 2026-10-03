@@ -10,6 +10,7 @@ const fs = require("fs");
 const path = require("path");
 const { createHash, createHmac, randomUUID } = require("node:crypto");
 const { Pool } = require("pg");
+const sharp = require("sharp");
 
 function loadEnv() {
   const candidates = [".env.local", ".env"];
@@ -39,6 +40,33 @@ const IMAGE_EXTENSIONS = {
   "image/avif": "avif",
   "image/bmp": "bmp",
 };
+
+const WEBP_MAX_EDGE = 1600;
+const WEBP_QUALITY = 75;
+
+async function optimizeToWebp(buffer, contentType) {
+  if (contentType === "image/gif") {
+    try {
+      const meta = await sharp(buffer, { animated: true, failOn: "none" }).metadata();
+      if ((meta.pages || 1) > 1) {
+        return { buffer, contentType: "image/gif", extension: "gif" };
+      }
+    } catch {
+      /* convert still GIF below */
+    }
+  }
+  const webp = await sharp(buffer, { failOn: "none" })
+    .rotate()
+    .resize({
+      width: WEBP_MAX_EDGE,
+      height: WEBP_MAX_EDGE,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .webp({ quality: WEBP_QUALITY, effort: 6 })
+    .toBuffer();
+  return { buffer: webp, contentType: "image/webp", extension: "webp" };
+}
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -171,25 +199,30 @@ async function migrateHtml(html) {
       console.warn("  skip unreadable data URL");
       continue;
     }
+    const optimized = await optimizeToWebp(parsed.buffer, parsed.contentType);
     const now = new Date();
     const year = String(now.getUTCFullYear());
     const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-    const key = `content/${year}/${month}/${randomUUID()}.${IMAGE_EXTENSIONS[parsed.contentType]}`;
+    const key = `content/${year}/${month}/${randomUUID()}.${optimized.extension}`;
     if (DRY_RUN) {
       const fake = `https://media.nutrifactx.com/${key}`;
       map.set(dataUrl, fake);
       replaced += 1;
-      console.log(`  [dry-run] would upload ${parsed.contentType} (${parsed.buffer.length} bytes)`);
+      console.log(
+        `  [dry-run] ${parsed.contentType} ${parsed.buffer.length} → ${optimized.contentType} ${optimized.buffer.length} bytes`,
+      );
       continue;
     }
     const url = await uploadToR2({
       key,
-      body: parsed.buffer,
-      contentType: parsed.contentType,
+      body: optimized.buffer,
+      contentType: optimized.contentType,
     });
     map.set(dataUrl, url);
     replaced += 1;
-    console.log(`  uploaded ${parsed.contentType} → ${url}`);
+    console.log(
+      `  uploaded ${parsed.contentType} ${parsed.buffer.length} → ${optimized.contentType} ${optimized.buffer.length} ${url}`,
+    );
   }
 
   let next = text;
