@@ -7,7 +7,7 @@ export default async function RecentPosts() {
   if (!recentPosts.length) return null;
 
   return (
-    <section className="nf-animate-fade-up nf-delay-1">
+    <section>
       <h2 className="nf-section-title mb-3.5">
         Recent posts
       </h2>

@@ -127,7 +127,8 @@ export default async function BlogDetailPage({ params }) {
           <CoverImage
             src={blog.featuredImage}
             alt=""
-            priority
+            preload
+            quality={50}
             sizes="100vw"
             className="bd-banner-photo"
           />

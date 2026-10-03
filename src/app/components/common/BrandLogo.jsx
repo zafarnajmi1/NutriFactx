@@ -22,6 +22,8 @@ export default function BrandLogo({
         width={size}
         height={size}
         className="shrink-0 rounded-[22%]"
+        decoding="async"
+        fetchPriority="low"
         aria-hidden="true"
       />
       {showWord ? (
