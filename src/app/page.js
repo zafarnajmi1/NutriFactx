@@ -4,15 +4,14 @@ import LatestBlogs from "./components/home-components/LatestBlog";
 import PageSeoJsonLd from "./components/common/PageSeoJsonLd";
 import { getFeaturedBlogs } from "@/lib/blogs";
 import { buildPageMetadata } from "@/lib/siteSeo";
-import { connection } from "next/server";
+
+export const revalidate = 60;
 
 export async function generateMetadata() {
-  await connection();
   return buildPageMetadata("home");
 }
 
 export default async function Home() {
-  await connection();
   const featuredBlogs = await getFeaturedBlogs();
 
   return (

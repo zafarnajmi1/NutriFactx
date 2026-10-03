@@ -7,7 +7,7 @@ export default async function LatestBlogs() {
   if (!latestPosts.length) return null;
 
   return (
-    <section className="nf-animate-fade-up nf-delay-2">
+    <section>
       <h2 className="nf-section-title mb-3.5">
         Most viewed
       </h2>

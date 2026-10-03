@@ -60,7 +60,8 @@ export default function BannerSection({ slides = [] }) {
           key={slide.id}
           src={slide.featuredImage}
           alt=""
-          priority={active === 0}
+          preload={active === 0}
+          quality={50}
           sizes="100vw"
           className="pointer-events-none object-cover opacity-45"
         />
@@ -79,7 +80,7 @@ export default function BannerSection({ slides = [] }) {
       />
 
       <div className="nf-page relative flex min-h-[280px] flex-col justify-center py-14 sm:min-h-[340px] md:min-h-[380px]">
-        <div key={slide.id} className="nf-animate-fade-up max-w-xl">
+        <div key={slide.id} className="max-w-xl">
           <span className="inline-block rounded-md bg-nf-green-soft px-2.5 py-1 text-xs font-medium text-nf-green-deep">
             Featured
           </span>

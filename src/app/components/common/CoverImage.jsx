@@ -32,8 +32,12 @@ export default function CoverImage({
   className = "",
   sizes,
   priority = false,
+  preload = false,
+  quality = 50,
 }) {
   if (!src) return null;
+
+  const shouldPreload = Boolean(preload || priority);
 
   if (isOptimizableSrc(src)) {
     return (
@@ -42,7 +46,8 @@ export default function CoverImage({
         alt={alt}
         fill
         sizes={sizes}
-        priority={priority}
+        quality={quality}
+        preload={shouldPreload}
         className={className}
       />
     );
@@ -54,8 +59,8 @@ export default function CoverImage({
       src={src}
       alt={alt}
       className={`absolute inset-0 h-full w-full ${className}`}
-      loading={priority ? "eager" : "lazy"}
-      fetchPriority={priority ? "high" : "auto"}
+      loading={shouldPreload ? "eager" : "lazy"}
+      fetchPriority={shouldPreload ? "high" : "low"}
       decoding="async"
     />
   );

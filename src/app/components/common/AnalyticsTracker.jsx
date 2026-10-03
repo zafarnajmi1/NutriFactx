@@ -94,82 +94,104 @@ export default function AnalyticsTracker() {
       return undefined;
     }
 
-    const { visitorId, sessionId } = getAnalyticsIdentity();
-    const pageKey = getPageKey(pathname);
-    const params = new URLSearchParams(window.location.search);
-    let activeStartedAt =
-      document.visibilityState === "visible" ? performance.now() : null;
-    let accumulatedActiveMs = 0;
-    let maxScroll = 0;
+    let cancelled = false;
+    let cleanupTrackers = () => {};
 
-    const engagementPayload = () => ({
-      type: "engagement",
-      visitorId,
-      sessionId,
-      pageKey,
-      engagementMs: Math.round(
-        accumulatedActiveMs +
-          (activeStartedAt === null ? 0 : performance.now() - activeStartedAt),
-      ),
-      maxScroll,
-    });
+    const startTracking = () => {
+      if (cancelled) return;
 
-    const flushEngagement = () => {
-      touchSession(sessionId);
-      postAnalytics(engagementPayload());
-    };
+      const { visitorId, sessionId } = getAnalyticsIdentity();
+      const pageKey = getPageKey(pathname);
+      const params = new URLSearchParams(window.location.search);
+      let activeStartedAt =
+        document.visibilityState === "visible" ? performance.now() : null;
+      let accumulatedActiveMs = 0;
+      let maxScroll = 0;
 
-    postAnalytics({
-      type: "pageview",
-      visitorId,
-      sessionId,
-      pageKey,
-      path: `${pathname}${window.location.search}`,
-      title: document.title,
-      referrer: document.referrer,
-      utmSource: params.get("utm_source") || "",
-      utmMedium: params.get("utm_medium") || "",
-      utmCampaign: params.get("utm_campaign") || "",
-    });
+      const engagementPayload = () => ({
+        type: "engagement",
+        visitorId,
+        sessionId,
+        pageKey,
+        engagementMs: Math.round(
+          accumulatedActiveMs +
+            (activeStartedAt === null ? 0 : performance.now() - activeStartedAt),
+        ),
+        maxScroll,
+      });
 
-    const handleScroll = () => {
-      const documentHeight =
-        document.documentElement.scrollHeight - window.innerHeight;
-      const percentage =
-        documentHeight <= 0
-          ? 100
-          : Math.round((window.scrollY / documentHeight) * 100);
-      maxScroll = Math.max(maxScroll, Math.min(100, percentage));
-    };
+      const flushEngagement = () => {
+        touchSession(sessionId);
+        postAnalytics(engagementPayload());
+      };
 
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden") {
+      postAnalytics({
+        type: "pageview",
+        visitorId,
+        sessionId,
+        pageKey,
+        path: `${pathname}${window.location.search}`,
+        title: document.title,
+        referrer: document.referrer,
+        utmSource: params.get("utm_source") || "",
+        utmMedium: params.get("utm_medium") || "",
+        utmCampaign: params.get("utm_campaign") || "",
+      });
+
+      const handleScroll = () => {
+        const documentHeight =
+          document.documentElement.scrollHeight - window.innerHeight;
+        const percentage =
+          documentHeight <= 0
+            ? 100
+            : Math.round((window.scrollY / documentHeight) * 100);
+        maxScroll = Math.max(maxScroll, Math.min(100, percentage));
+      };
+
+      const handleVisibility = () => {
+        if (document.visibilityState === "hidden") {
+          if (activeStartedAt !== null) {
+            accumulatedActiveMs += performance.now() - activeStartedAt;
+            activeStartedAt = null;
+          }
+          flushEngagement();
+        } else if (activeStartedAt === null) {
+          activeStartedAt = performance.now();
+        }
+      };
+
+      const interval = window.setInterval(flushEngagement, HEARTBEAT_MS);
+      window.addEventListener("scroll", handleScroll, { passive: true });
+      window.addEventListener("pagehide", flushEngagement);
+      document.addEventListener("visibilitychange", handleVisibility);
+      handleScroll();
+
+      cleanupTrackers = () => {
+        window.clearInterval(interval);
+        window.removeEventListener("scroll", handleScroll);
+        window.removeEventListener("pagehide", flushEngagement);
+        document.removeEventListener("visibilitychange", handleVisibility);
         if (activeStartedAt !== null) {
           accumulatedActiveMs += performance.now() - activeStartedAt;
           activeStartedAt = null;
         }
         flushEngagement();
-      } else if (activeStartedAt === null) {
-        activeStartedAt = performance.now();
-      }
+      };
     };
 
-    const interval = window.setInterval(flushEngagement, HEARTBEAT_MS);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("pagehide", flushEngagement);
-    document.addEventListener("visibilitychange", handleVisibility);
-    handleScroll();
+    const idleId =
+      typeof requestIdleCallback === "function"
+        ? requestIdleCallback(startTracking, { timeout: 2500 })
+        : window.setTimeout(startTracking, 2500);
 
     return () => {
-      window.clearInterval(interval);
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("pagehide", flushEngagement);
-      document.removeEventListener("visibilitychange", handleVisibility);
-      if (activeStartedAt !== null) {
-        accumulatedActiveMs += performance.now() - activeStartedAt;
-        activeStartedAt = null;
+      cancelled = true;
+      if (typeof cancelIdleCallback === "function") {
+        cancelIdleCallback(idleId);
+      } else {
+        window.clearTimeout(idleId);
       }
-      flushEngagement();
+      cleanupTrackers();
     };
   }, [pathname]);
 

@@ -23,6 +23,24 @@ export default function Header() {
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const searchRef = useRef(null);
   const categoriesRef = useRef(null);
+  const categoriesRequest = useRef(null);
+
+  function loadCategories() {
+    if (categoriesRequest.current) return categoriesRequest.current;
+    categoriesRequest.current = fetch("/api/topics")
+      .then((res) => (res.ok ? res.json() : { topics: [] }))
+      .then((data) => {
+        const list = Array.isArray(data.topics) ? data.topics : [];
+        setCategories(list);
+        return list;
+      })
+      .catch(() => {
+        categoriesRequest.current = null;
+        setCategories([]);
+        return [];
+      });
+    return categoriesRequest.current;
+  }
 
   useEffect(() => {
     const q = query.trim();
@@ -64,20 +82,26 @@ export default function Header() {
   }, [query]);
 
   useEffect(() => {
-    let cancelled = false;
-    fetch("/api/topics")
-      .then((res) => (res.ok ? res.json() : { topics: [] }))
-      .then((data) => {
-        if (cancelled) return;
-        setCategories(Array.isArray(data.topics) ? data.topics : []);
-      })
-      .catch(() => {
-        if (!cancelled) setCategories([]);
-      });
+    const idle =
+      typeof requestIdleCallback === "function"
+        ? requestIdleCallback(() => {
+            loadCategories();
+          }, { timeout: 2500 })
+        : window.setTimeout(() => {
+            loadCategories();
+          }, 2500);
     return () => {
-      cancelled = true;
+      if (typeof cancelIdleCallback === "function") {
+        cancelIdleCallback(idle);
+      } else {
+        window.clearTimeout(idle);
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (menuOpen) loadCategories();
+  }, [menuOpen]);
 
   useEffect(() => {
     setCategoriesOpen(false);
@@ -147,7 +171,12 @@ export default function Header() {
               }`}
               aria-expanded={categoriesOpen}
               aria-haspopup="listbox"
-              onClick={() => setCategoriesOpen((value) => !value)}
+              onMouseEnter={loadCategories}
+              onFocus={loadCategories}
+              onClick={() => {
+                loadCategories();
+                setCategoriesOpen((value) => !value);
+              }}
             >
               Categories
               <svg
@@ -374,7 +403,10 @@ export default function Header() {
                   type="button"
                   className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-nf-secondary hover:bg-nf-green-soft hover:text-nf-green"
                   aria-expanded={categoriesOpen}
-                  onClick={() => setCategoriesOpen((value) => !value)}
+                  onClick={() => {
+                    loadCategories();
+                    setCategoriesOpen((value) => !value);
+                  }}
                 >
                   Categories
                   <svg
