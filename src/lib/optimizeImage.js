@@ -7,7 +7,7 @@ import {
 } from "@/lib/imageUpload";
 
 const WEBP_MAX_EDGE = 1600;
-const WEBP_QUALITY = 80;
+const WEBP_QUALITY = 75;
 
 const UNSUPPORTED_ERROR =
   "Unsupported image. Use JPG, PNG, WebP, GIF, AVIF, or BMP (any extension is fine).";
@@ -50,7 +50,7 @@ export async function optimizeImageForUpload(inputBuffer, declaredType = "") {
         fit: "inside",
         withoutEnlargement: true,
       })
-      .webp({ quality: WEBP_QUALITY, effort: 4 })
+      .webp({ quality: WEBP_QUALITY, effort: 6 })
       .toBuffer();
 
     return {
