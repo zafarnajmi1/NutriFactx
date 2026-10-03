@@ -5,6 +5,12 @@
   "engines": {
     "node": ">=20.0.0"
   },
+  "browserslist": [
+    "chrome >= 111",
+    "firefox >= 111",
+    "safari >= 16.4",
+    "edge >= 111"
+  ],
   "scripts": {
     "dev": "next dev",
     "prebuild": "node scripts/check-postcss-clean.cjs",

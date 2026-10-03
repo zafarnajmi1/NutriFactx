@@ -15,6 +15,7 @@ import {
 } from "@/lib/blogs";
 import { getPrimaryCluster } from "@/lib/clusters";
 import { buildArticleBreadcrumbJsonLd, buildArticleJsonLd, buildArticleMetadata } from "@/lib/seo";
+import CoverImage from "../../components/common/CoverImage";
 import "./blog-detail.css";
 
 function withLazyContentImages(html) {
@@ -119,14 +120,18 @@ export default async function BlogDetailPage({ params }) {
 
       <div
         className={`bd-banner${showBannerImage ? " has-image" : ""}`}
-        style={
-          showBannerImage
-            ? { backgroundImage: `url(${blog.featuredImage})` }
-            : undefined
-        }
         role={showBannerImage ? "img" : undefined}
         aria-label={showBannerImage ? blog.title : undefined}
       >
+        {showBannerImage ? (
+          <CoverImage
+            src={blog.featuredImage}
+            alt=""
+            priority
+            sizes="100vw"
+            className="bd-banner-photo"
+          />
+        ) : null}
         <div className="bd-banner-inner">
           {cluster?.slug ? (
             <Link href={`/topics/${cluster.slug}`} className="bd-eyebrow">

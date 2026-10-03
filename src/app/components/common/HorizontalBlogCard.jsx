@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CoverImage from "./CoverImage";
 
 const categoryStyles = {
   Nutrition: "bg-[#E1F5EE] text-[#085041]",
@@ -62,13 +63,11 @@ export default function HorizontalBlogCard({
         }`}
       >
         {image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <CoverImage
             src={image}
             alt={title || "Article cover"}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-            loading="lazy"
-            decoding="async"
+            sizes={compact ? "80px" : "(max-width: 640px) 112px, 144px"}
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
           />
         ) : (
           <div className={`h-full w-full bg-gradient-to-br ${tone}`} aria-hidden="true" />

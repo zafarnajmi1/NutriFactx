@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import CoverImage from "../common/CoverImage";
 
 function getFallbackSlides() {
   const year = new Date().getFullYear();
@@ -56,11 +57,13 @@ export default function BannerSection({ slides = [] }) {
   return (
     <section className="relative overflow-hidden bg-nf-green text-white">
       {slide.featuredImage ? (
-        <div
-          key={`image-${slide.id}`}
-          className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-45"
-          style={{ backgroundImage: `url("${slide.featuredImage}")` }}
-          aria-hidden="true"
+        <CoverImage
+          key={slide.id}
+          src={slide.featuredImage}
+          alt=""
+          priority={active === 0}
+          sizes="100vw"
+          className="pointer-events-none object-cover opacity-45"
         />
       ) : null}
       <div

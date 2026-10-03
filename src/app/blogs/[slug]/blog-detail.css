@@ -33,6 +33,7 @@
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 1;
   opacity: 0.3;
   pointer-events: none;
   background-image:
@@ -49,8 +50,15 @@
   );
 }
 
+.blog-detail-page .bd-banner-photo {
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+}
+
 .blog-detail-page .bd-banner-inner {
   position: relative;
+  z-index: 2;
   width: 100%;
   max-width: var(--nf-page-max, 92rem);
   margin: 0 auto;

@@ -3,10 +3,44 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+function imageRemotePatterns() {
+  const patterns = [
+    { protocol: "https", hostname: "media.nutrifactx.com", pathname: "/**" },
+    { protocol: "https", hostname: "nutrifactx.com", pathname: "/**" },
+    { protocol: "https", hostname: "www.nutrifactx.com", pathname: "/**" },
+    { protocol: "https", hostname: "*.r2.dev", pathname: "/**" },
+    { protocol: "http", hostname: "localhost", pathname: "/**" },
+  ];
+  const r2Base = process.env.CF_R2_PUBLIC_BASE_URL?.trim();
+  if (r2Base) {
+    try {
+      const url = new URL(r2Base);
+      const protocol = url.protocol.replace(":", "");
+      if (protocol === "http" || protocol === "https") {
+        patterns.push({
+          protocol,
+          hostname: url.hostname,
+          pathname: "/**",
+        });
+      }
+    } catch {
+      /* ignore invalid public media URL */
+    }
+  }
+  return patterns;
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // TipTap's useEditor is incompatible with React Compiler in this setup
   reactCompiler: false,
+  images: {
+    remotePatterns: imageRemotePatterns(),
+    formats: ["image/avif", "image/webp"],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1600],
+    imageSizes: [64, 96, 128, 256, 384],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+  },
   // Allow large article saves when content embeds original images (no pixel compression).
   experimental: {
     serverActions: {
