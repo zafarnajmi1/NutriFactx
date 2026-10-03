@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import DashboardSidebar from "../DashboardSidebar";
 import DashboardPager, { paginateItems } from "../DashboardPager";
-import AddCategoryButton from "../AddCategoryButton";
+import AddCategoryButton, { ManageCategoriesButton } from "../AddCategoryButton";
 import "../dashboard.css";
 
 const statusLabel = {
@@ -173,6 +173,23 @@ export default function DashboardArticlesPage() {
                   setExtraCategories((prev) =>
                     prev.includes(name) ? prev : [...prev, name],
                   );
+                }}
+              />
+              <ManageCategoriesButton
+                onChanged={(change) => {
+                  loadArticles();
+                  setExtraCategories((prev) => {
+                    const next = prev
+                      .map((item) => (item === change.from ? change.to : item))
+                      .filter((item) => item && item !== change.from);
+                    return [...new Set(next)];
+                  });
+                  setCategory((prev) => {
+                    if (prev === change.from) {
+                      return change.type === "rename" ? change.to : "all";
+                    }
+                    return prev;
+                  });
                 }}
               />
             </div>

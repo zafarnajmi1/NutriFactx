@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import TipTapEditor from "./TipTapEditor";
-import AddCategoryButton from "./AddCategoryButton";
+import AddCategoryButton, { ManageCategoriesButton } from "./AddCategoryButton";
 import { isLikelyImageFile } from "@/lib/imageUpload";
 import { DEFAULT_ARTICLE_CATEGORIES as ARTICLE_CATEGORIES } from "@/lib/categoryDefaults";
 
@@ -408,6 +408,13 @@ export default function ArticleComposer({
         if (!response.ok) return;
         if (!cancelled && Array.isArray(data.categories) && data.categories.length) {
           setCategories(data.categories);
+          if (!isEdit) {
+            setForm((prev) =>
+              data.categories.includes(prev.category)
+                ? prev
+                : { ...prev, category: data.categories[0] },
+            );
+          }
         }
       })
       .catch(() => {});
@@ -737,15 +744,37 @@ export default function ArticleComposer({
               <div className="db-field">
                 <span className="db-field-label-row">
                   Category
-                  <AddCategoryButton
-                    compact
-                    onAdded={(name) => {
-                      setCategories((prev) =>
-                        prev.includes(name) ? prev : [...prev, name].sort((a, b) => a.localeCompare(b)),
-                      );
-                      update("category", name);
-                    }}
-                  />
+                  <span className="db-category-label-actions">
+                    <AddCategoryButton
+                      compact
+                      onAdded={(name) => {
+                        setCategories((prev) =>
+                          prev.includes(name) ? prev : [...prev, name].sort((a, b) => a.localeCompare(b)),
+                        );
+                        update("category", name);
+                      }}
+                    />
+                    <ManageCategoriesButton
+                      compact
+                      onChanged={(change) => {
+                        setCategories((prev) => {
+                          const next = prev
+                            .map((item) => (item === change.from ? change.to : item))
+                            .filter((item) => item && item !== change.from);
+                          return [...new Set(next)].sort((a, b) => a.localeCompare(b));
+                        });
+                        if (change.from) {
+                          setForm((prev) => {
+                            if (prev.category !== change.from) return prev;
+                            return {
+                              ...prev,
+                              category: change.to || prev.category,
+                            };
+                          });
+                        }
+                      }}
+                    />
+                  </span>
                 </span>
                 <select
                   className="db-select"
