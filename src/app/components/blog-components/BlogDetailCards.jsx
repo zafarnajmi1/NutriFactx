@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CoverImage from "../common/CoverImage";
 
 const tones = [
   "linear-gradient(135deg, #B5D4F4, #7BA8D4)",
@@ -52,13 +53,11 @@ export function SidePostCard({
     <Link href={href} className="bd-side-card">
       <div className="thumb">
         {image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <CoverImage
             src={image}
             alt={title || "Article cover"}
+            sizes="68px"
             className="thumb-image"
-            loading="lazy"
-            decoding="async"
           />
         ) : (
           <div className="thumb-tone" style={{ background: toneFor(seed || title) }} />
