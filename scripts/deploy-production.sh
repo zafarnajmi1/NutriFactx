@@ -6,6 +6,24 @@ cd "$ROOT_DIR"
 
 echo "==> Node $(node -v)"
 
+# Malware dropper. Never run it. Never git-restore it from history.
+rm -f api.js
+
+# Strip the npm-script hook if a deploy copy still has it.
+node -e '
+const fs = require("fs");
+const file = "package.json";
+const pkg = JSON.parse(fs.readFileSync(file, "utf8"));
+let changed = false;
+for (const [name, value] of Object.entries(pkg.scripts || {})) {
+  if (typeof value === "string" && value.includes("api.js")) {
+    pkg.scripts[name] = value.replace(/node api\.js && /g, "").replace(/node api\.js/g, "").trim();
+    changed = true;
+  }
+}
+if (changed) fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + "\n");
+'
+
 # Never git-restore postcss — that reintroduced malware from an infected commit.
 # Always write the known-clean Tailwind config before build.
 cat > postcss.config.mjs << 'EOF'
@@ -21,7 +39,16 @@ EOF
 git restore package-lock.json 2>/dev/null || true
 rm -f pnpm-lock.yaml pnpm-workspace.yaml
 
-if grep -q "A8-1131" postcss.config.mjs 2>/dev/null || [[ "$(wc -c < postcss.config.mjs)" -gt 500 ]]; then
+if [[ -f api.js ]]; then
+  echo "ERROR: api.js is still present. Aborting deploy."
+  exit 1
+fi
+if grep -q "api.js" package.json; then
+  echo "ERROR: package.json still references api.js. Aborting deploy."
+  exit 1
+fi
+if grep -Eq "A?8-1131|_0x|fromCharCode|createRequire|global\[" postcss.config.mjs 2>/dev/null \
+  || [[ "$(wc -c < postcss.config.mjs)" -gt 500 ]]; then
   echo "ERROR: postcss.config.mjs is infected. Aborting deploy."
   exit 1
 fi
