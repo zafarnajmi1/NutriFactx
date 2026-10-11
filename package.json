@@ -18,6 +18,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:check": "node scripts/check-db.js",
+    "seo:apply": "node --env-file=.env.local scripts/apply-seo-audit-fixes.js",
     "db:migrate-content-images": "node scripts/migrate-content-images-to-r2.js",
     "images:webp": "node scripts/convert-r2-images-to-webp.js",
     "deploy:production": "bash scripts/deploy-production.sh"

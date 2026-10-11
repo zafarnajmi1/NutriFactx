@@ -1,5 +1,11 @@
 import pool, { shouldUseLocalDbFallback } from "./db";
-import { absoluteUrl, getSiteUrl, sanitizeMetaText } from "./seo";
+import {
+  absoluteUrl,
+  getSiteUrl,
+  metadataTitle,
+  sanitizeMetaText,
+  socialTitle,
+} from "./seo";
 
 export const SITE_SEO_PAGES = [
   {
@@ -46,17 +52,16 @@ const PAGE_KEYS = SITE_SEO_PAGES.map((page) => page.key);
 
 const DEFAULTS = {
   home: {
-    metaTitle:
-      "NutriFactx | Science-Backed Nutrition Facts & Practical Wellness Guides",
+    metaTitle: "Nutrition Facts & Healthy Eating Tips | NutriFactX",
     metaDescription:
-      "Clear, science-backed nutrition facts and practical wellness guides from NutriFactx—vitamins, diet tips, and everyday health explained simply.",
-    focusKeyword: "science-backed nutrition facts",
+      "Confused about nutrition? NutriFactX breaks down science-backed nutrition facts, healthy eating tips, and diet advice in simple language.",
+    focusKeyword: "nutrition facts",
     keywords:
-      "science-backed nutrition facts, NutriFactx, wellness guides, vitamins, healthy eating",
+      "nutrition facts, healthy eating tips, diet tips, science-backed nutrition, NutriFactX",
     canonicalUrl: "/",
-    ogTitle: "NutriFactx | Science-Backed Nutrition Facts",
+    ogTitle: "Nutrition Facts & Healthy Eating Tips | NutriFactX",
     ogDescription:
-      "Science-backed nutrition facts and practical wellness guides you can use every day.",
+      "Confused about nutrition? NutriFactX breaks down science-backed nutrition facts, healthy eating tips, and diet advice in simple language.",
     ogImage: DEFAULT_SHARE_IMAGE,
     twitterTitle: "",
     twitterDescription: "",
@@ -427,13 +432,13 @@ export async function buildPageMetadata(pageKey) {
     seo.canonicalUrl || page?.path || "/",
     siteUrl,
   );
-  const ogTitle = sanitizeMetaText(seo.ogTitle || title);
+  const ogTitle = socialTitle(seo.ogTitle, title);
   const ogDescription = sanitizeMetaText(seo.ogDescription || description);
   const ogImage = resolvePublicImage(
     seo.ogImage || DEFAULT_SHARE_IMAGE,
     siteUrl,
   );
-  const twitterTitle = sanitizeMetaText(seo.twitterTitle || ogTitle);
+  const twitterTitle = socialTitle(seo.twitterTitle, ogTitle);
   const twitterDescription = sanitizeMetaText(
     seo.twitterDescription || ogDescription,
   );
@@ -449,7 +454,7 @@ export async function buildPageMetadata(pageKey) {
     : undefined;
 
   return {
-    title,
+    title: metadataTitle(title),
     description,
     keywords: keywords.length ? keywords : undefined,
     robots: {

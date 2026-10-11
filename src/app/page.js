@@ -18,7 +18,7 @@ export default async function Home() {
     <>
       <PageSeoJsonLd pageKey="home" />
       <h1 className="sr-only">
-        NutriFactx, science-backed nutrition facts and wellness insights
+        Nutrition facts and healthy eating tips from NutriFactx
       </h1>
       <BannerSection slides={featuredBlogs} />
       <div className="nf-page space-y-8 py-8 sm:py-10">

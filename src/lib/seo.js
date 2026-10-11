@@ -30,6 +30,24 @@ export function sanitizeMetaText(value) {
     .trim();
 }
 
+/** Avoid `layout.js` appending "| NutriFactx" when the title already includes the brand. */
+export function metadataTitle(title) {
+  const value = sanitizeMetaText(title);
+  if (!value) return value;
+  if (/nutrifactx/i.test(value)) return { absolute: value };
+  return value;
+}
+
+/** Drop comma-stuffed or overlong social titles so OG/Twitter match the real page title. */
+export function socialTitle(preferred, fallback) {
+  const value = sanitizeMetaText(preferred);
+  const commas = (value.match(/,/g) || []).length;
+  if (!value || value.length > 70 || commas >= 2) {
+    return sanitizeMetaText(fallback);
+  }
+  return value;
+}
+
 /**
  * Public article URL for canonical / Open Graph / JSON-LD.
  * If canonical points at a different /blogs/{slug} on this site (common after a
@@ -74,7 +92,7 @@ export function buildArticleMetadata(blog) {
       "Science-backed nutrition facts and wellness insights from NutriFactx.",
   );
   const canonical = resolveArticleUrl(blog, siteUrl);
-  const ogTitle = sanitizeMetaText(blog.ogTitle || title);
+  const ogTitle = socialTitle(blog.ogTitle, title);
   const ogDescription = sanitizeMetaText(blog.ogDescription || description);
   const ogImageRaw = blog.ogImage || blog.featuredImage || "";
   // Social crawlers need a public http(s) URL — skip base64 data images
@@ -98,7 +116,7 @@ export function buildArticleMetadata(blog) {
         },
       ]
     : undefined;
-  const twitterTitle = sanitizeMetaText(blog.twitterTitle || ogTitle);
+  const twitterTitle = socialTitle(blog.twitterTitle, ogTitle);
   const twitterDescription = sanitizeMetaText(
     blog.twitterDescription || ogDescription,
   );
@@ -110,7 +128,7 @@ export function buildArticleMetadata(blog) {
       : "";
 
   return {
-    title,
+    title: metadataTitle(title),
     description,
     keywords: keywords.length ? keywords : undefined,
     authors: blog.author ? [{ name: blog.author }] : undefined,

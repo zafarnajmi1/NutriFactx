@@ -25,10 +25,11 @@ const siteUrl = getSiteUrl();
 export const metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "NutriFactx",
+    default: "Nutrition Facts & Healthy Eating Tips | NutriFactX",
     template: "%s | NutriFactx",
   },
-  description: "Science-backed nutrition facts and wellness insights",
+  description:
+    "Confused about nutrition? NutriFactX breaks down science-backed nutrition facts, healthy eating tips, and diet advice in simple language.",
   applicationName: "NutriFactx",
   authors: [{ name: "NutriFactx" }],
   creator: "NutriFactx",
@@ -54,8 +55,9 @@ export const metadata = {
     locale: "en_US",
     url: siteUrl,
     siteName: "NutriFactx",
-    title: "NutriFactx",
-    description: "Science-backed nutrition facts and wellness insights",
+    title: "Nutrition Facts & Healthy Eating Tips | NutriFactX",
+    description:
+      "Confused about nutrition? NutriFactX breaks down science-backed nutrition facts, healthy eating tips, and diet advice in simple language.",
     images: [
       {
         url: "/brand/nutrifactx-icon.png",
@@ -67,8 +69,9 @@ export const metadata = {
   },
   twitter: {
     card: "summary",
-    title: "NutriFactx",
-    description: "Science-backed nutrition facts and wellness insights",
+    title: "Nutrition Facts & Healthy Eating Tips | NutriFactX",
+    description:
+      "Confused about nutrition? NutriFactX breaks down science-backed nutrition facts, healthy eating tips, and diet advice in simple language.",
     images: ["/brand/nutrifactx-icon.png"],
   },
   icons: {

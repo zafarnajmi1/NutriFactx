@@ -33,8 +33,10 @@ const STOP_WORDS = new Set([
   "out",
   "per",
   "really",
+  "says",
   "should",
   "simple",
+  "stop",
   "than",
   "that",
   "the",
@@ -155,12 +157,16 @@ function termsFromPost(blog) {
     addTerm(terms, `${first} ${second}`, "topic", 2);
   }
 
-  for (const word of words) {
-    if (isStopWord(word) || word.length < 4) continue;
-    addTerm(terms, word, "topic", 2);
-  }
-
   return terms;
+}
+
+/** Only real category/tag hubs and multi-word topics with enough posts. */
+export function isIndexableCluster(cluster) {
+  if (!cluster?.slug) return false;
+  const posts = Array.isArray(cluster.posts) ? cluster.posts.length : 0;
+  if (cluster.source === "category") return posts >= 1;
+  if (cluster.source === "tag") return posts >= 2;
+  return posts >= 2 && cluster.slug.includes("-");
 }
 
 function mergeName(current, incoming, currentSource, incomingSource) {

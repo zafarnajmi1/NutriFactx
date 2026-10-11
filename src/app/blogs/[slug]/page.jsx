@@ -13,7 +13,7 @@ import {
   getRecentBlogs,
   getRelatedBlogs,
 } from "@/lib/blogs";
-import { getPrimaryCluster } from "@/lib/clusters";
+import { getPrimaryCluster, slugifyTopic } from "@/lib/clusters";
 import { buildArticleBreadcrumbJsonLd, buildArticleJsonLd, buildArticleMetadata } from "@/lib/seo";
 import CoverImage from "../../components/common/CoverImage";
 import "./blog-detail.css";
@@ -100,6 +100,7 @@ export default async function BlogDetailPage({ params }) {
 
   const showBannerImage = Boolean(blog.featuredImage);
   const cluster = getPrimaryCluster(blog, allBlogs);
+  const categorySlug = slugifyTopic(blog.category);
   const jsonLd = buildArticleJsonLd(blog);
   const breadcrumbLd = buildArticleBreadcrumbJsonLd(blog, cluster);
 
@@ -134,8 +135,8 @@ export default async function BlogDetailPage({ params }) {
           />
         ) : null}
         <div className="bd-banner-inner">
-          {cluster?.slug ? (
-            <Link href={`/topics/${cluster.slug}`} className="bd-eyebrow">
+          {categorySlug ? (
+            <Link href={`/topics/${categorySlug}`} className="bd-eyebrow">
               {blog.category}
             </Link>
           ) : (

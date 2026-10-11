@@ -1,7 +1,11 @@
 import { listAuthors } from "@/lib/authors";
 import { getAllBlogs } from "@/lib/blogs";
 import { listCategoryNames } from "@/lib/categories";
-import { listTopicClusters, slugifyTopic } from "@/lib/clusters";
+import {
+  isIndexableCluster,
+  listDashboardCategoryHubs,
+  listTopicClusters,
+} from "@/lib/clusters";
 import { getSiteUrl } from "@/lib/seo";
 import { SITE_SEO_PAGES, listSiteSeoPages } from "@/lib/siteSeo";
 
@@ -67,13 +71,12 @@ export default async function sitemap() {
       priority: 0.5,
     }));
 
-  const clustered = listTopicClusters(blogs);
+  const clustered = listTopicClusters(blogs).filter(isIndexableCluster);
   const seenTopicSlugs = new Set(clustered.map((cluster) => cluster.slug));
-  const dashboardTopicRoutes = categoryNames
-    .map((name) => slugifyTopic(name))
-    .filter((slug) => slug && !seenTopicSlugs.has(slug))
-    .map((slug) => ({
-      url: `${siteUrl}/topics/${slug}`,
+  const dashboardTopicRoutes = listDashboardCategoryHubs(categoryNames, blogs)
+    .filter((hub) => isIndexableCluster(hub) && !seenTopicSlugs.has(hub.slug))
+    .map((hub) => ({
+      url: `${siteUrl}/topics/${hub.slug}`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.7,

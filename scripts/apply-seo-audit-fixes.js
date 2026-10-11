@@ -20,17 +20,16 @@ function sanitize(value) {
 
 const PAGE_SEO = {
   home: {
-    metaTitle:
-      "NutriFactx | Science-Backed Nutrition Facts & Practical Wellness Guides",
+    metaTitle: "Nutrition Facts & Healthy Eating Tips | NutriFactX",
     metaDescription:
-      "Clear, science-backed nutrition facts and practical wellness guides from NutriFactx—vitamins, diet tips, and everyday health explained simply.",
-    focusKeyword: "science-backed nutrition facts",
+      "Confused about nutrition? NutriFactX breaks down science-backed nutrition facts, healthy eating tips, and diet advice in simple language.",
+    focusKeyword: "nutrition facts",
     keywords:
-      "science-backed nutrition facts, NutriFactx, wellness guides, vitamins, healthy eating",
+      "nutrition facts, healthy eating tips, diet tips, science-backed nutrition, NutriFactX",
     canonicalUrl: "/",
-    ogTitle: "NutriFactx | Science-Backed Nutrition Facts",
+    ogTitle: "Nutrition Facts & Healthy Eating Tips | NutriFactX",
     ogDescription:
-      "Science-backed nutrition facts and practical wellness guides you can use every day.",
+      "Confused about nutrition? NutriFactX breaks down science-backed nutrition facts, healthy eating tips, and diet advice in simple language.",
     schemaType: "WebSite",
   },
   blogs: {

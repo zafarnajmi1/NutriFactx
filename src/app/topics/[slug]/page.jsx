@@ -1,7 +1,7 @@
 import BlogsList from "../../components/blog-components/BlogsList";
 import { getAllBlogs } from "@/lib/blogs";
 import { listCategoryNames } from "@/lib/categories";
-import { getTopicCluster } from "@/lib/clusters";
+import { getTopicCluster, isIndexableCluster } from "@/lib/clusters";
 import { absoluteUrl, getSiteUrl, sanitizeMetaText } from "@/lib/seo";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
@@ -32,10 +32,20 @@ export async function generateMetadata({ params }) {
       .filter(Boolean),
   ];
 
+  const indexable = isIndexableCluster(cluster);
+
   return {
     title,
     description,
     keywords,
+    robots: {
+      index: indexable,
+      follow: true,
+      googleBot: {
+        index: indexable,
+        follow: true,
+      },
+    },
     alternates: { canonical },
     openGraph: {
       type: "website",
