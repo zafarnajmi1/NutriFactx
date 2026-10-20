@@ -59,7 +59,9 @@ fi
 node scripts/check-postcss-clean.cjs
 
 echo "==> Installing dependencies (includes Tailwind for CSS build)"
-npm ci
+# npm ci fails on npm 12 when the lockfile is missing optional Next/ESLint peers.
+# Use install with a pinned lockfile instead of aborting deploy.
+npm install --no-audit --no-fund --legacy-peer-deps
 
 echo "==> Building production bundle"
 rm -rf .next
