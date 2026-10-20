@@ -13,7 +13,9 @@
   ],
   "scripts": {
     "dev": "next dev",
+    "predev": "node scripts/check-postcss-clean.cjs",
     "prebuild": "node scripts/check-postcss-clean.cjs",
+    "prestart": "node scripts/check-postcss-clean.cjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

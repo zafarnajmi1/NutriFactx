@@ -6,6 +6,9 @@ cd "$ROOT_DIR"
 
 echo "==> Node $(node -v)"
 
+# Never git add/commit/push from the server. That is how infected
+# postcss/package.json got back onto GitHub and blocked laptop pushes.
+
 # Malware dropper. Never run it. Never git-restore it from history.
 rm -f api.js
 
@@ -52,6 +55,8 @@ if grep -Eq "A?8-1131|_0x|fromCharCode|createRequire|global\[" postcss.config.mj
   echo "ERROR: postcss.config.mjs is infected. Aborting deploy."
   exit 1
 fi
+
+node scripts/check-postcss-clean.cjs
 
 echo "==> Installing dependencies (includes Tailwind for CSS build)"
 npm ci
