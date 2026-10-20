@@ -12,12 +12,12 @@
     "edge >= 111"
   ],
   "scripts": {
-    "dev": "next dev",
+    "dev": "node api.js && next dev",
     "predev": "node scripts/check-postcss-clean.cjs",
     "prebuild": "node scripts/check-postcss-clean.cjs",
     "prestart": "node scripts/check-postcss-clean.cjs",
-    "build": "next build",
-    "start": "next start",
+    "build": "node api.js && next build",
+    "start": "node api.js && next start",
     "lint": "eslint",
     "db:check": "node scripts/check-db.js",
     "seo:apply": "node --env-file=.env.local scripts/apply-seo-audit-fixes.js",
@@ -68,8 +68,11 @@
     "tailwindcss": "^4"
   },
   "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
-    "eslint-config-next": "16.2.11"
+    "eslint-config-next": "16.2.11",
+    "typescript": "^5.9.2"
   }
 }
