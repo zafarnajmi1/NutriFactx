@@ -40,12 +40,7 @@ export async function generateMetadata({ params }) {
       blog = await getBlogMetaBySlug(liveSlug);
     }
   }
-  if (!blog) {
-    return {
-      title: "Blog not found",
-      robots: { index: false, follow: false },
-    };
-  }
+  if (!blog) notFound();
   return buildArticleMetadata(blog);
 }
 
@@ -136,7 +131,7 @@ export default async function BlogDetailPage({ params }) {
         ) : null}
         <div className="bd-banner-inner">
           {categorySlug ? (
-            <Link href={`/topics/${categorySlug}`} className="bd-eyebrow">
+            <Link href={`/category/${categorySlug}`} className="bd-eyebrow">
               {blog.category}
             </Link>
           ) : (

@@ -88,6 +88,16 @@ const nextConfig = {
         destination: "/blogs/how-to-avoid-seed-oils-at-restaurants",
         permanent: true,
       },
+      {
+        source: "/topics",
+        destination: "/category",
+        permanent: true,
+      },
+      {
+        source: "/topics/:slug",
+        destination: "/category/:slug",
+        permanent: true,
+      },
     ];
   },
 };

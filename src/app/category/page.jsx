@@ -14,7 +14,7 @@ export async function generateMetadata() {
   const description = sanitizeMetaText(
     "Browse NutriFactx categories—protein, seed oils, vitamins, and other science-backed nutrition guides.",
   );
-  const canonical = absoluteUrl("/topics");
+  const canonical = absoluteUrl("/category");
   return {
     title,
     description,
@@ -30,7 +30,7 @@ export async function generateMetadata() {
   };
 }
 
-export default async function TopicsIndexPage() {
+export default async function CategoryIndexPage() {
   await connection();
   const [blogs, categoryNames] = await Promise.all([
     getAllBlogs(),
@@ -38,13 +38,13 @@ export default async function TopicsIndexPage() {
   ]);
   const clusters = listDashboardCategoryHubs(categoryNames, blogs);
   const siteUrl = getSiteUrl();
-  const pageUrl = absoluteUrl("/topics", siteUrl);
+  const pageUrl = absoluteUrl("/category", siteUrl);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: "Categories",
     description:
-      "Topic clusters of science-backed nutrition articles from NutriFactx.",
+      "Categories of science-backed nutrition articles from NutriFactx.",
     url: pageUrl,
     isPartOf: {
       "@type": "WebSite",
@@ -56,7 +56,7 @@ export default async function TopicsIndexPage() {
       itemListElement: clusters.map((cluster, index) => ({
         "@type": "ListItem",
         position: index + 1,
-        url: absoluteUrl(`/topics/${cluster.slug}`, siteUrl),
+        url: absoluteUrl(`/category/${cluster.slug}`, siteUrl),
         name: cluster.name,
       })),
     },
@@ -77,7 +77,7 @@ export default async function TopicsIndexPage() {
             {clusters.map((cluster) => (
               <li key={cluster.slug}>
                 <Link
-                  href={`/topics/${cluster.slug}`}
+                  href={`/category/${cluster.slug}`}
                   className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#ececec] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)]"
                 >
                   <span className={pillClass}>{cluster.name}</span>

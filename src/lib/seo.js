@@ -244,7 +244,7 @@ export function buildArticleBreadcrumbJsonLd(blog, cluster) {
       "@type": "ListItem",
       position: 3,
       name: cluster.name,
-      item: absoluteUrl(`/topics/${cluster.slug}`, siteUrl),
+      item: absoluteUrl(`/category/${cluster.slug}`, siteUrl),
     });
   }
 

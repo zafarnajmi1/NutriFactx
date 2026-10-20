@@ -20,9 +20,7 @@ function formatListDate(value) {
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const author = await getAuthorBySlug(slug);
-  if (!author) {
-    return { title: "Author not found", robots: { index: false, follow: false } };
-  }
+  if (!author) notFound();
   const description =
     author.qualifications ||
     author.title ||

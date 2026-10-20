@@ -126,7 +126,7 @@ export default function Header() {
     setOpen(false);
     setMenuOpen(false);
     if (item.kind === "category") {
-      router.push(`/topics/${item.slug}`);
+      router.push(`/category/${item.slug}`);
       return;
     }
     router.push(`/blogs/${item.slug}`);
@@ -140,7 +140,7 @@ export default function Header() {
   }
 
   const categoriesActive =
-    pathname === "/topics" || pathname.startsWith("/topics/");
+    pathname === "/category" || pathname.startsWith("/category/");
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-nf-border bg-white/95 backdrop-blur-sm">
@@ -202,7 +202,7 @@ export default function Header() {
                     categories.map((item) => (
                       <li key={item.slug}>
                         <Link
-                          href={`/topics/${item.slug}`}
+                          href={`/category/${item.slug}`}
                           className="block px-3.5 py-2 text-sm text-nf-text transition hover:bg-nf-green-soft hover:text-nf-green"
                           onClick={() => setCategoriesOpen(false)}
                         >
@@ -429,7 +429,7 @@ export default function Header() {
                       categories.map((item) => (
                         <li key={item.slug}>
                           <Link
-                            href={`/topics/${item.slug}`}
+                            href={`/category/${item.slug}`}
                             className="block px-3 py-2 text-sm text-nf-text hover:bg-nf-green-soft hover:text-nf-green"
                             onClick={() => {
                               setCategoriesOpen(false);

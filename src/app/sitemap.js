@@ -76,7 +76,7 @@ export default async function sitemap() {
   const dashboardTopicRoutes = listDashboardCategoryHubs(categoryNames, blogs)
     .filter((hub) => isIndexableCluster(hub) && !seenTopicSlugs.has(hub.slug))
     .map((hub) => ({
-      url: `${siteUrl}/topics/${hub.slug}`,
+      url: `${siteUrl}/category/${hub.slug}`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.7,
@@ -84,13 +84,13 @@ export default async function sitemap() {
 
   const clusterRoutes = [
     {
-      url: `${siteUrl}/topics`,
+      url: `${siteUrl}/category`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.75,
     },
     ...clustered.map((cluster) => ({
-      url: `${siteUrl}/topics/${cluster.slug}`,
+      url: `${siteUrl}/category/${cluster.slug}`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.7,

@@ -1,7 +1,7 @@
 import BlogsList from "../../components/blog-components/BlogsList";
 import { getAllBlogs } from "@/lib/blogs";
 import { listCategoryNames } from "@/lib/categories";
-import { getTopicCluster, isIndexableCluster } from "@/lib/clusters";
+import { getTopicCluster } from "@/lib/clusters";
 import { absoluteUrl, getSiteUrl, sanitizeMetaText } from "@/lib/seo";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
@@ -14,16 +14,11 @@ export async function generateMetadata({ params }) {
     listCategoryNames().catch(() => []),
   ]);
   const cluster = getTopicCluster(slug, blogs, dashboardCategories);
-  if (!cluster) {
-    return {
-      title: "Category not found",
-      robots: { index: false, follow: false },
-    };
-  }
+  if (!cluster) notFound();
 
   const title = sanitizeMetaText(cluster.title);
   const description = sanitizeMetaText(cluster.description);
-  const canonical = absoluteUrl(`/topics/${cluster.slug}`);
+  const canonical = absoluteUrl(`/category/${cluster.slug}`);
   const keywords = [
     cluster.focusKeyword,
     ...String(cluster.keywords || "")
@@ -32,17 +27,15 @@ export async function generateMetadata({ params }) {
       .filter(Boolean),
   ];
 
-  const indexable = isIndexableCluster(cluster);
-
   return {
     title,
     description,
     keywords,
     robots: {
-      index: indexable,
+      index: true,
       follow: true,
       googleBot: {
-        index: indexable,
+        index: true,
         follow: true,
       },
     },
@@ -63,7 +56,7 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function TopicClusterPage({ params }) {
+export default async function CategoryPage({ params }) {
   await connection();
   const { slug } = await params;
   const [blogs, dashboardCategories] = await Promise.all([
@@ -74,7 +67,7 @@ export default async function TopicClusterPage({ params }) {
   if (!cluster) notFound();
 
   const siteUrl = getSiteUrl();
-  const pageUrl = absoluteUrl(`/topics/${cluster.slug}`, siteUrl);
+  const pageUrl = absoluteUrl(`/category/${cluster.slug}`, siteUrl);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",

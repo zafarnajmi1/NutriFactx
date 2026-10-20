@@ -160,13 +160,9 @@ function termsFromPost(blog) {
   return terms;
 }
 
-/** Only real category/tag hubs and multi-word topics with enough posts. */
+/** Index any topic hub that actually exists as a public page. */
 export function isIndexableCluster(cluster) {
-  if (!cluster?.slug) return false;
-  const posts = Array.isArray(cluster.posts) ? cluster.posts.length : 0;
-  if (cluster.source === "category") return posts >= 1;
-  if (cluster.source === "tag") return posts >= 2;
-  return posts >= 2 && cluster.slug.includes("-");
+  return Boolean(cluster?.slug);
 }
 
 function mergeName(current, incoming, currentSource, incomingSource) {
